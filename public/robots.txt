@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://multi-language-typing-guru.netlify.app/sitemap.xml
