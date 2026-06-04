@@ -1,0 +1,514 @@
+/* Error 404 Page Styles */
+
+.authnest-error-page-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.authnest-error-page-container.light {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #2d3748;
+}
+
+.authnest-error-page-container.dark {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+  color: #e2e8f0;
+}
+
+/* Animated background particles */
+.authnest-error-page-container::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(
+      circle at 20% 50%,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 80%,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 40% 20%,
+      rgba(255, 255, 255, 0.05) 0%,
+      transparent 50%
+    );
+  animation: backgroundPulse 15s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes backgroundPulse {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Main content container */
+.authnest-error-page-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  max-width: 1200px;
+  width: 100%;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+    text-align: center;
+  }
+}
+
+/* Text content section */
+.authnest-error-page-text {
+  animation: slideInLeft 0.8s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.authnest-error-page-title {
+  font-size: 8rem;
+  font-weight: 900;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  animation: glitchTitle 3s ease-in-out infinite;
+  line-height: 1;
+}
+
+@keyframes glitchTitle {
+  0%,
+  90%,
+  100% {
+    transform: translate(0);
+  }
+  92% {
+    transform: translate(-2px, 2px);
+  }
+  94% {
+    transform: translate(2px, -2px);
+  }
+  96% {
+    transform: translate(-2px, -2px);
+  }
+  98% {
+    transform: translate(2px, 2px);
+  }
+}
+
+.authnest-error-page-subtitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 1rem 0;
+  color: #ffffff;
+  text-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.authnest-error-page-description {
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin: 1.5rem 0 2rem;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 600px;
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-description {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Details section */
+.authnest-error-page-details {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin: 2rem 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.authnest-error-page-details:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.authnest-error-page-details-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: #ffffff;
+}
+
+.authnest-error-page-details-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.authnest-error-page-details-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  transition: transform 0.2s ease;
+}
+
+.authnest-error-page-details-item:hover {
+  transform: translateX(5px);
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-details-item {
+    justify-content: center;
+  }
+}
+
+.authnest-error-page-details-item svg {
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Action buttons */
+.authnest-error-page-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-actions {
+    justify-content: center;
+  }
+}
+
+.authnest-error-page-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  font-family: inherit;
+}
+
+.authnest-error-page-button::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.authnest-error-page-button:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.authnest-error-page-button svg {
+  position: relative;
+  z-index: 1;
+}
+
+.authnest-error-page-button span {
+  position: relative;
+  z-index: 1;
+}
+
+.authnest-error-page-button-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.authnest-error-page-button-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.authnest-error-page-button-primary:active {
+  transform: translateY(-1px);
+}
+
+.authnest-error-page-button-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.authnest-error-page-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
+}
+
+.authnest-error-page-button-secondary:active {
+  transform: translateY(-1px);
+}
+
+/* Visual section with 3D cube */
+.authnest-error-page-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+  animation: slideInRight 0.8s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.authnest-error-page-floating-elements {
+  position: relative;
+  width: 400px;
+  height: 400px;
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-floating-elements {
+    width: 300px;
+    height: 300px;
+  }
+}
+
+/* Floating decorative elements */
+.authnest-error-page-floating-element {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.05)
+  );
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  animation: float 6s ease-in-out infinite;
+}
+
+.authnest-error-page-floating-element:nth-child(1) {
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.authnest-error-page-floating-element:nth-child(2) {
+  top: 60%;
+  right: 10%;
+  animation-delay: 2s;
+  width: 80px;
+  height: 80px;
+}
+
+.authnest-error-page-floating-element:nth-child(3) {
+  bottom: 10%;
+  left: 20%;
+  animation-delay: 4s;
+  width: 50px;
+  height: 50px;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-30px) rotate(180deg);
+  }
+}
+
+/* 3D Cube */
+.authnest-error-page-cube {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200px;
+  height: 200px;
+  transform-style: preserve-3d;
+  transform: translate(-50%, -50%) rotateX(0deg) rotateY(0deg);
+  animation: rotateCube 20s infinite linear;
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-cube {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@keyframes rotateCube {
+  0% {
+    transform: translate(-50%, -50%) rotateX(0deg) rotateY(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotateX(360deg) rotateY(360deg);
+  }
+}
+
+.authnest-error-page-face {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 5rem;
+  font-weight: 900;
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    rgba(102, 126, 234, 0.8),
+    rgba(118, 75, 162, 0.8)
+  );
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 30px rgba(102, 126, 234, 0.5),
+    inset 0 0 30px rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-face {
+    width: 150px;
+    height: 150px;
+    font-size: 3.5rem;
+  }
+}
+
+.authnest-error-page-face-front {
+  transform: translateZ(100px);
+}
+
+.authnest-error-page-face-back {
+  transform: translateZ(-100px) rotateY(180deg);
+}
+
+.authnest-error-page-face-right {
+  transform: rotateY(90deg) translateZ(100px);
+}
+
+.authnest-error-page-face-left {
+  transform: rotateY(-90deg) translateZ(100px);
+}
+
+.authnest-error-page-face-top {
+  transform: rotateX(90deg) translateZ(100px);
+}
+
+.authnest-error-page-face-bottom {
+  transform: rotateX(-90deg) translateZ(100px);
+}
+
+@media (max-width: 968px) {
+  .authnest-error-page-face-front {
+    transform: translateZ(75px);
+  }
+
+  .authnest-error-page-face-back {
+    transform: translateZ(-75px) rotateY(180deg);
+  }
+
+  .authnest-error-page-face-right {
+    transform: rotateY(90deg) translateZ(75px);
+  }
+
+  .authnest-error-page-face-left {
+    transform: rotateY(-90deg) translateZ(75px);
+  }
+
+  .authnest-error-page-face-top {
+    transform: rotateX(90deg) translateZ(75px);
+  }
+
+  .authnest-error-page-face-bottom {
+    transform: rotateX(-90deg) translateZ(75px);
+  }
+}
+
+/* Dark mode adjustments */
+.authnest-error-page-container.dark .authnest-error-page-details {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.authnest-error-page-container.dark .authnest-error-page-button-primary {
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.authnest-error-page-container.dark .authnest-error-page-button-primary:hover {
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+}
+
+.authnest-error-page-container.dark .authnest-error-page-button-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.authnest-error-page-container.dark
+  .authnest-error-page-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Smooth transitions for theme switching */
+.authnest-error-page-container * {
+  transition: background-color 0.3s ease, color 0.3s ease,
+    border-color 0.3s ease;
+}

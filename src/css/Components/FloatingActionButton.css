@@ -1,0 +1,327 @@
+/* Floating Action Button Styles */
+.authnest-floating-action-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+}
+
+.authnest-fab-main {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 1001;
+}
+
+.authnest-fab-main:hover {
+  transform: scale(1.1);
+  box-shadow: 0 12px 35px rgba(99, 102, 241, 0.6);
+}
+
+.authnest-fab-main.authnest-fab-open {
+  transform: rotate(45deg);
+  background: linear-gradient(135deg, #ef4444, #f97316);
+}
+
+.authnest-fab-menu {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  width: 280px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  animation: authnest-fab-slide-up 0.3s ease-out;
+}
+
+@keyframes authnest-fab-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.authnest-fab-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 16px 16px 0 0;
+}
+
+.authnest-fab-back {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-right: 0.75rem;
+  border-radius: 8px;
+  transform: rotate(180deg);
+  transition: all 0.2s ease;
+}
+
+.authnest-fab-back:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.authnest-fab-title {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.authnest-fab-items {
+  padding: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.authnest-fab-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  background: none;
+  border: none;
+  border-radius: 12px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.authnest-fab-item:hover {
+  background: var(--bg-secondary);
+  transform: translateX(4px);
+}
+
+.authnest-fab-item-icon {
+  margin-right: 0.75rem;
+  color: var(--premium-primary);
+  display: flex;
+  align-items: center;
+}
+
+.authnest-fab-item-label {
+  flex: 1;
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.authnest-fab-chevron {
+  color: var(--text-tertiary);
+  margin-left: auto;
+}
+
+.authnest-fab-close {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--bg-secondary);
+  border: none;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  border-radius: 0 0 16px 16px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.authnest-fab-close:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* High Contrast Mode */
+.high-contrast {
+  --text-primary: #000000;
+  --text-secondary: #333333;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f0f0f0;
+  --border-color: #000000;
+}
+
+.high-contrast.dark {
+  --text-primary: #ffffff;
+  --text-secondary: #cccccc;
+  --bg-primary: #000000;
+  --bg-secondary: #333333;
+  --border-color: #ffffff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .authnest-floating-action-button {
+    bottom: 1rem;
+    right: 1rem;
+  }
+
+  .authnest-fab-main {
+    width: 56px;
+    height: 56px;
+  }
+
+  .authnest-fab-menu {
+    width: 260px;
+    bottom: 65px;
+    right: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .authnest-floating-action-button {
+    bottom: 0.75rem;
+    right: 0.75rem;
+  }
+
+  .authnest-fab-main {
+    width: 52px;
+    height: 52px;
+  }
+
+  .authnest-fab-menu {
+    width: calc(100vw - 2rem);
+    right: -0.5rem;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .authnest-fab-main,
+  .authnest-fab-item,
+  .authnest-fab-menu {
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Focus states for accessibility */
+.authnest-fab-main:focus,
+.authnest-fab-item:focus,
+.authnest-fab-back:focus,
+.authnest-fab-close:focus {
+  outline: 2px solid var(--premium-primary);
+  outline-offset: 2px;
+}
+
+/* Danger Zone Menu Item - Main Menu */
+.authnest-fab-item.danger {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  color: white !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 8px 0;
+  box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+}
+
+.authnest-fab-item.danger:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b) !important;
+  transform: translateX(4px) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+}
+
+.authnest-fab-item.danger .authnest-fab-item-icon {
+  color: white !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.authnest-fab-item.danger .authnest-fab-chevron {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Danger Zone Submenu Items */
+.authnest-fab-item.danger-option {
+  color: #dc2626 !important;
+  border-left: 3px solid #dc2626;
+  margin: 4px 0;
+  border-radius: 10px;
+}
+
+.authnest-fab-item.danger-option:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(220, 38, 38, 0.1),
+    rgba(185, 28, 28, 0.15)
+  ) !important;
+  border-left: 3px solid #ef4444;
+  transform: translateX(4px) !important;
+}
+
+.authnest-fab-item.danger-option .authnest-fab-item-icon {
+  color: #dc2626 !important;
+  background: rgba(220, 38, 38, 0.1);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+/* Danger Zone Header Styling */
+.authnest-fab-header.danger {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.authnest-fab-header.danger .authnest-fab-title {
+  color: white;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.authnest-fab-header.danger .authnest-fab-back {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.authnest-fab-header.danger .authnest-fab-back:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Danger Zone specific animation */
+@keyframes authnest-pulse-danger {
+  0%,
+  100% {
+    box-shadow: 0 4px 15px rgba(220, 38, 38, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(220, 38, 38, 0.5);
+  }
+}
+
+.authnest-fab-item.danger {
+  animation: authnest-pulse-danger 2s infinite;
+}
+
+/* For the main danger menu item in closed state */
+.authnest-fab-main.danger-alert::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: #dc2626;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+  animation: authnest-pulse-danger 1s infinite;
+}
+
+/* Update the menu rendering to include danger class for submenu items */
+/* In your JSX, update the dangerousOptions config to include color: 'danger-option' */
