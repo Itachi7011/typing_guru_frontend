@@ -24,6 +24,7 @@ import {
   Star,
   AlertTriangle,
   Flame,
+  GraduationCap,
 } from "lucide-react";
 
 const LS_KEY = "tc_user_data";
@@ -82,7 +83,7 @@ export default function Navbar() {
       dropdown: [
         { label: "Typing Test", path: "/", icon: Keyboard },
         { label: "Custom Drills", path: "/drills", icon: Brain },
-        { label: "Code Typing", path: "/code", icon: BookOpen },
+        // { label: "Code Typing", path: "/code", icon: BookOpen },
         { label: "Daily Challenge", path: "/daily", icon: Flame },
       ],
     },
@@ -96,6 +97,7 @@ export default function Navbar() {
       ],
     },
     { label: "Languages", path: "/languages", icon: Globe },
+    { label: "Govt Exams", path: "/exams", icon: GraduationCap },
   ];
 
   const AUTH_MENU = [

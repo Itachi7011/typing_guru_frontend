@@ -1059,4 +1059,6 @@ export const SKILL_TREE = [
   { id: "master", name: "Master Typist", xpReq: 5000 },
 ];
 
+
+
 export const LS_KEY = "tc_user_data";

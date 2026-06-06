@@ -2075,7 +2075,7 @@
   cursor: pointer;
   z-index: 10;
   transition: all 0.2s;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 .tc-sidebar-toggle-float:hover {
   width: 28px;
@@ -2086,7 +2086,7 @@
 .tc-sidebar {
   background: var(--tc-bg2);
   border-right: 1px solid var(--tc-border);
-  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
 }
 .tc-sb-inner {
   padding: 1rem;
@@ -2117,7 +2117,7 @@
   cursor: pointer;
   z-index: 1000;
   transition: all 0.2s ease;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 }
 .tc-sidebar-toggle-main:hover {
   left: 320px;
@@ -2180,7 +2180,7 @@
   .tc-sidebar-toggle-collapse {
     left: 0; /* on mobile, sidebar covers full width when expanded */
   }
-  
+
   .tc-sidebar-toggle-expand {
     left: 0; /* on mobile, collapsed sidebar is also at left edge */
   }
@@ -2197,4 +2197,488 @@
 .tc-sidebar-toggle-expand:hover {
   left: 4.6rem;
   background: var(--tc-accent2);
+}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE — TABLETS & MOBILES
+═══════════════════════════════════════════ */
+
+/* Tablet: 768px–1024px */
+@media (max-width: 1024px) {
+  .tc-main {
+    max-width: 100%;
+    padding: 1.2rem 1rem;
+  }
+  .tc-stat-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .tc-ach-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Small tablet: 600px–768px */
+@media (max-width: 768px) {
+  .tc-main {
+    padding: 1rem 0.75rem;
+  }
+
+  .tc-pagebar-inner {
+    padding: 0.4rem 0.75rem;
+    gap: 0.1rem;
+  }
+  .tc-pb-btn {
+    padding: 0.35rem 0.55rem;
+    font-size: 0.72rem;
+  }
+  .tc-pb-chip {
+    display: none;
+  }
+
+  .tc-config-bar-inner {
+    padding: 0 0.5rem;
+    min-height: 40px;
+    gap: 0.05rem;
+  }
+  .tc-cfg-trigger {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.7rem;
+  }
+
+  .tc-live-bar {
+    gap: 0.8rem;
+    padding: 0.65rem 0.75rem;
+  }
+  .tc-live-val {
+    font-size: 1.35rem;
+  }
+  .tc-live-badges {
+    display: none;
+  }
+
+  .tc-text-disp {
+    font-size: 0.95rem;
+    line-height: 1.9;
+  }
+
+  .tc-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .tc-charts-row {
+    grid-template-columns: 1fr;
+  }
+  .tc-arow {
+    grid-template-columns: 1fr;
+  }
+  .tc-ach-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tc-hist-head,
+  .tc-hist-row {
+    grid-template-columns: 1.5fr 0.8fr 0.8fr;
+  }
+  .tc-hist-head span:last-child,
+  .tc-hist-row span:last-child {
+    display: none;
+  }
+
+  .tc-lb-head,
+  .tc-lb-row {
+    grid-template-columns: 50px 1fr 60px;
+  }
+  .tc-lb-head span:last-child,
+  .tc-lb-row span:last-child {
+    display: none;
+  }
+
+  /* Hide hand visualizer on tablets */
+  .hand-visualizer-container {
+    display: none !important;
+  }
+
+  .tc-vkbd-wrap {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    border-radius: 16px 16px 0 0;
+    width: 100% !important;
+  }
+}
+
+/* Mobile: <600px */
+@media (max-width: 599px) {
+  .tc-pagebar-inner {
+    padding: 0.35rem 0.5rem;
+  }
+  .tc-pb-btn span {
+    display: none;
+  }
+  .tc-pb-btn {
+    padding: 0.38rem 0.5rem;
+  }
+
+  .tc-config-bar-inner {
+    gap: 0;
+    padding: 0 0.35rem;
+  }
+  .tc-cfg-trigger {
+    padding: 0.28rem 0.42rem;
+    font-size: 0.68rem;
+  }
+  .tc-cfg-badge {
+    display: none;
+  }
+  .tc-cfg-divider {
+    display: none;
+  }
+  .tc-cfg-quick-btn span {
+    display: none;
+  }
+  .tc-cfg-quick-btn {
+    padding: 0.28rem 0.38rem;
+  }
+
+  .tc-live-bar {
+    gap: 0.55rem;
+    padding: 0.55rem 0.5rem;
+  }
+  .tc-live-val {
+    font-size: 1.15rem;
+  }
+  .tc-live-stat {
+    min-width: 40px;
+  }
+
+  .tc-type-area {
+    padding: 1rem;
+  }
+  .tc-text-disp {
+    font-size: 0.87rem;
+    line-height: 1.85;
+  }
+  .tc-input {
+    font-size: 0.88rem;
+  }
+
+  .tc-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+  .tc-stat-val {
+    font-size: 1rem;
+  }
+  .tc-ach-grid {
+    grid-template-columns: 1fr;
+  }
+  .tc-lvl-banner {
+    padding: 0.9rem;
+    gap: 0.75rem;
+  }
+
+  .tc-panel-ttl {
+    font-size: 1.05rem;
+  }
+  .tc-action-row {
+    gap: 0.4rem;
+  }
+  .tc-btn {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.76rem;
+  }
+  .tc-mile-row {
+    gap: 0.35rem;
+  }
+  .tc-mile {
+    font-size: 0.72rem;
+    padding: 0.3rem 0.55rem;
+  }
+
+  /* Hand visualizer definitely hidden on mobile */
+  .hand-visualizer-container {
+    display: none !important;
+  }
+
+  /* Dropdown: full width on mobile */
+  .tc-cfg-dropdown {
+    position: fixed;
+    left: 0.5rem !important;
+    right: 0.5rem !important;
+    top: auto !important;
+    bottom: 1rem;
+    min-width: unset;
+    border-radius: 16px;
+  }
+
+  .tc-fname {
+    min-width: 90px;
+    font-size: 0.65rem;
+  }
+  .tc-fbar {
+    gap: 0.4rem;
+  }
+}
+
+/* Very small: <380px */
+@media (max-width: 380px) {
+  .tc-live-val {
+    font-size: 1rem;
+  }
+  .tc-text-disp {
+    font-size: 0.8rem;
+  }
+  .tc-pring {
+    transform: scale(0.85);
+  }
+}
+
+/* Add to your CSS file */
+.tc-text-line {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.tc-text-line span {
+  display: inline-block;
+}
+
+.tc-empty-line {
+  height: 1.8rem;
+  opacity: 0.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-top: 1px dashed var(--tc-border);
+  margin: 0.25rem 0;
+}
+
+.tc-placeholder-dots {
+  color: var(--tc-text3);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  opacity: 0.5;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Update text display area */
+.tc-text-disp {
+  min-height: 250px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  padding: 0.5rem;
+}
+
+/* Scroll to current position */
+.tc-ch-cur {
+  position: relative;
+  scroll-margin-top: 100px;
+}
+
+/* Ensure text area can handle long content */
+.tc-type-area {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Add/update these CSS rules */
+.tc-text-line {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: keep-all;
+}
+
+.tc-text-line span {
+  display: inline-block;
+  white-space: pre;
+}
+
+/* Make spaces visible with a subtle indicator (optional) */
+.tc-ch-ok,
+.tc-ch-err,
+.tc-ch-pend {
+  display: inline-block;
+  min-width: 0.25em;
+}
+
+/* Optional: Make spaces slightly highlighted */
+.tc-ch-ok:contains(" ") {
+  background: rgba(16, 185, 129, 0.1);
+  min-width: 0.5em;
+}
+
+.tc-ch-err:contains(" ") {
+  background: rgba(239, 68, 68, 0.1);
+  min-width: 0.5em;
+}
+
+/* Replace your existing .tc-text-line styles with these */
+
+.tc-text-line {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: normal;
+  letter-spacing: normal;
+}
+
+.tc-text-line span {
+  display: inline;
+  white-space: pre;
+  letter-spacing: normal;
+}
+
+/* Remove any flex or grid that distributes space */
+/* Make sure no justify-content or space-between is applied */
+
+/* Optional: Make spaces visible with a subtle indicator but no extra spacing */
+.tc-space-char {
+  opacity: 0.5;
+  color: var(--tc-accent2);
+  display: inline;
+}
+
+/* Ensure normal character spacing */
+.tc-ch-ok,
+.tc-ch-err,
+.tc-ch-pend {
+  display: inline;
+  white-space: pre;
+}
+
+.tc-text-disp {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  line-height: 2;
+  color: var(--tc-text3);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.85rem;
+  user-select: none;
+  word-break: normal;
+  white-space: normal;
+  min-height: 250px;
+  display: block;
+  width: 100%;
+}
+
+/* Replace these CSS rules */
+
+.tc-type-area {
+  background: var(--tc-bg2);
+  border: 1px solid var(--tc-border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  margin-bottom: 0.85rem;
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tc-text-disp {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  line-height: 2;
+  color: var(--tc-text3);
+  letter-spacing: 0.03em;
+  margin-bottom: 0.85rem;
+  user-select: none;
+  word-break: normal;
+  white-space: normal;
+  min-height: 250px;
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+}
+
+.tc-text-line {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: normal;
+  letter-spacing: normal;
+}
+
+.tc-text-line span {
+  display: inline;
+  white-space: pre;
+  letter-spacing: normal;
+}
+
+/* Make text fill the container width */
+.tc-text-line {
+  width: 100%;
+  word-break: break-all;
+}
+
+/* Adjust line length to use more space */
+.tc-text-disp {
+  max-width: 100%;
+}
+// Add to the style section at the beginning
+.dr-root.dark {
+  --tc-bg: #0a0b0f;
+  --tc-bg2: #11131a;
+  --tc-bg3: #181b25;
+  --tc-border: #252836;
+  --tc-text: #e8eaf6;
+  --tc-text2: #8b90a4;
+  --tc-text3: #555b6e;
+  --tc-accent: #7c6af7;
+  --tc-accent2: #5eead4;
+  --tc-red: #ef4444;
+  --tc-green: #10b981;
+  --tc-yellow: #f59e0b;
+  --tc-blue: #3b82f6;
+  --tc-purple: #a855f7;
+  --tc-teal: #14b8a6;
+  --tc-indigo: #6366f1;
+  --tc-orange: #f97316;
+  --tc-pend: #555b6e;
+  --tc-cur: #7c6af7;
+}
+.dr-root.light {
+  --tc-bg: #f4f5fb;
+  --tc-bg2: #fff;
+  --tc-bg3: #eef0f8;
+  --tc-border: #d8dbe8;
+  --tc-text: #1a1c2e;
+  --tc-text2: #5a5f78;
+  --tc-text3: #9096b0;
+  --tc-accent: #5b4ee8;
+  --tc-accent2: #0d9488;
+  --tc-red: #dc2626;
+  --tc-green: #059669;
+  --tc-yellow: #d97706;
+  --tc-blue: #2563eb;
+  --tc-purple: #9333ea;
+  --tc-teal: #0f766e;
+  --tc-indigo: #4f46e5;
+  --tc-orange: #ea6a10;
+  --tc-pend: #9096b0;
+  --tc-cur: #5b4ee8;
 }

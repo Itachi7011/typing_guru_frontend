@@ -435,10 +435,98 @@ const SideSection = ({ label, icon: Icon, children, defaultOpen = true }) => {
   );
 };
 
+// Add this after your imports and before the component
+const INFINITE_TEXT_GENERATOR = {
+  currentText: "",
+  currentIndex: 0,
+  bufferSize: 500, // Characters to generate ahead
+
+  generateMoreText: function (lang, mode, codeLang, capsMode, showCapsOption) {
+    let newChunk = "";
+    try {
+      if (mode === "code") {
+        newChunk = generateText(lang, "code", codeLang, 120, false);
+      } else {
+        newChunk = generateText(lang, mode, codeLang, 120, false);
+      }
+
+      // Apply capitalization if needed
+      if (showCapsOption && capsMode && mode !== "code") {
+        newChunk = this.applyMixedCase(newChunk);
+      }
+
+      return newChunk;
+    } catch (error) {
+      console.error("Error generating text:", error);
+      newChunk = generateText(lang, mode, codeLang, 80, false);
+      if (showCapsOption && capsMode && mode !== "code") {
+        newChunk = this.applyMixedCase(newChunk);
+      }
+      return newChunk;
+    }
+  },
+
+  applyMixedCase: function (text) {
+    const words = text.split(/(\s+)/);
+    const processedWords = words.map((word, index) => {
+      if (word.trim().length === 0) return word;
+      const isStartOfSentence =
+        index === 0 || (index > 0 && words[index - 1].trim().endsWith("."));
+      if (isStartOfSentence) {
+        return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      } else {
+        const properNouns = [
+          "I",
+          "JavaScript",
+          "React",
+          "Python",
+          "Swift",
+          "TypeScript",
+          "CSS",
+          "HTML",
+        ];
+        const shouldCapitalize =
+          properNouns.includes(word) || Math.random() < 0.15;
+        if (shouldCapitalize) {
+          return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        } else {
+          return word.toLowerCase();
+        }
+      }
+    });
+    return processedWords.join("");
+  },
+
+  ensureBuffer: function (
+    currentText,
+    userInputLength,
+    lang,
+    mode,
+    codeLang,
+    capsMode,
+    showCapsOption,
+  ) {
+    const remainingChars = currentText.length - userInputLength;
+    if (remainingChars < 200) {
+      const newChunk = this.generateMoreText(
+        lang,
+        mode,
+        codeLang,
+        capsMode,
+        showCapsOption,
+      );
+      return currentText + " " + newChunk;
+    }
+    return currentText;
+  },
+};
+
 // ── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function TypingCoach() {
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
+
+  const hasAutoCollapsedRef = useRef(false);
 
   const [showGuestModal, setShowGuestModal] = useState(false);
   useEffect(() => {
@@ -776,16 +864,17 @@ export default function TypingCoach() {
       setStartTime(Date.now());
       endTestCalledRef.current = false;
     }
+
     setUserInput(val);
-    const lastChar = val[val.length - 1],
-      expected = testWords[val.length - 1];
+    const lastChar = val[val.length - 1];
+    const expected = testWords[val.length - 1];
+
     if (lastChar !== undefined) {
       setPressedKey(lastChar);
       playClick();
       if (lastChar !== expected && expected) {
         setErrorMap((m) => ({ ...m, [expected]: (m[expected] || 0) + 1 }));
         setFingerErrors((f) => {
-          // Use the imported FINGER_KEY_MAP
           let finger = "other";
           const ek = (expected || "").toLowerCase();
           for (const [fn, keys] of Object.entries(FINGER_KEY_MAP))
@@ -801,13 +890,40 @@ export default function TypingCoach() {
         }
       }
     }
+
     userInputRef.current = val;
+
+    // INFINITE TEXT: Check if we're near the end and generate more
+    const remainingChars = testWords.length - val.length;
+    if (remainingChars < 200 && !testDone) {
+      const newChunk = INFINITE_TEXT_GENERATOR.generateMoreText(
+        lang,
+        mode,
+        codeLang,
+        capsMode,
+        showCapsOption,
+      );
+      setTestWords((prev) => prev + " " + newChunk);
+    }
+
     if (
       val.length >= testWords.length &&
       !testDone &&
       !endTestCalledRef.current
-    )
-      endTest();
+    ) {
+      // For infinite mode, never end test automatically
+      // Just generate more text
+      const newChunk = INFINITE_TEXT_GENERATOR.generateMoreText(
+        lang,
+        mode,
+        codeLang,
+        capsMode,
+        showCapsOption,
+      );
+      setTestWords((prev) => prev + " " + newChunk);
+    }
+
+    // For duration-based end, keep the timer end test
   }
 
   function handleKeyDown(e) {
@@ -961,6 +1077,7 @@ export default function TypingCoach() {
     });
   }
 
+  // When resetting test, optionally restore sidebar
   function resetTest() {
     if (timerRef.current) clearInterval(timerRef.current);
     if (wpmTickRef.current) clearInterval(wpmTickRef.current);
@@ -979,6 +1096,9 @@ export default function TypingCoach() {
     setTimeLeft(duration);
     endTestCalledRef.current = false;
     generateTest();
+
+    // Optionally restore sidebar when test ends
+    // setSidebarCollapsed(false); // Uncomment if you want sidebar to expand after reset
   }
 
   function startDrill() {
@@ -1065,6 +1185,47 @@ export default function TypingCoach() {
     })();
   }, []);
 
+  // Add this useEffect after your other useEffects
+  useEffect(() => {
+    if (testRunning && !testDone && userInput.length > 0) {
+      // Auto-scroll to current character position
+      setTimeout(() => {
+        const currentChar = document.querySelector(".tc-ch-cur");
+        const textDisplay = document.querySelector(".tc-text-disp");
+        if (currentChar && textDisplay) {
+          currentChar.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          });
+        }
+      }, 50);
+    }
+  }, [userInput, testRunning, testDone]);
+
+  useEffect(() => {
+    // Auto-collapse sidebar when test starts - only once per test session
+    if (
+      testRunning &&
+      !testDone &&
+      !sidebarCollapsed &&
+      !hasAutoCollapsedRef.current
+    ) {
+      // Use setTimeout to avoid cascading renders
+      const timeoutId = setTimeout(() => {
+        setSidebarCollapsed(true);
+        hasAutoCollapsedRef.current = true;
+      }, 0);
+
+      return () => clearTimeout(timeoutId);
+    }
+
+    // Reset the auto-collapse flag when test is not running
+    if (!testRunning && !testDone) {
+      hasAutoCollapsedRef.current = false;
+    }
+  }, [testRunning, testDone, sidebarCollapsed]);
+
   const a11yCls = [
     a11y.dyslexia ? "tc-dyslexia" : "",
     a11y.highContrast ? "tc-hc" : "",
@@ -1082,20 +1243,155 @@ export default function TypingCoach() {
     return Math.max(...h) - Math.min(...h) < avg * 0.05;
   }, [userData]);
 
-  const renderedText = useMemo(() => {
-    const chars = (testWords || "").split("").slice(0, 400);
-    return chars.map((ch, i) => {
-      let cls = "tc-ch-pend";
-      if (i < userInput.length)
-        cls = userInput[i] === ch ? "tc-ch-ok" : "tc-ch-err";
-      const isCursor = i === userInput.length;
-      return (
-        <span key={i} className={`${cls}${isCursor ? " tc-ch-cur" : ""}`}>
-          {ch === "\n" ? "↵\n" : ch}
-        </span>
+const renderedText = useMemo(() => {
+  if (!testWords) return null;
+
+  const text = testWords;
+
+  // Function to split text into lines at word boundaries while preserving spaces
+  const splitIntoLines = (str, maxLineLength = 75) => {
+    const lines = [];
+    let currentLine = "";
+
+    // Split by words but preserve spaces in the word array
+    const words = str.split(/(\s+)/);
+
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+
+      // If it's a space, handle it specially
+      if (word.match(/^\s+$/)) {
+        // Add space to current line if it doesn't exceed limit
+        if ((currentLine + word).length <= maxLineLength) {
+          currentLine += word;
+        } else {
+          // Space would exceed limit, start new line without the space
+          if (currentLine) lines.push(currentLine);
+          currentLine = "";
+        }
+      } else {
+        // It's a real word
+        const testLine = currentLine + word;
+
+        if (testLine.length > maxLineLength && currentLine.length > 0) {
+          // Current line is full, push it and start new line with this word
+          lines.push(currentLine.trimEnd()); // Remove trailing space
+          currentLine = word;
+        } else {
+          // Add word to current line
+          currentLine = testLine;
+        }
+      }
+    }
+
+    // Push the last line if it has content
+    if (currentLine) {
+      lines.push(currentLine.trimEnd());
+    }
+
+    // If no lines were created, add an empty line
+    if (lines.length === 0) {
+      lines.push("");
+    }
+
+    // Convert each line to character array for rendering
+    return lines.map((line) => line.split(""));
+  };
+
+  // Split into lines - FIXED: removed recursive call
+  const lines = splitIntoLines(text, 75);
+  if (lines.length === 0) return null;
+
+  // Find which line contains the current typing position
+  let charCount = 0;
+  let currentLineIndex = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const lineStart = charCount;
+    const lineEnd = charCount + lines[i].length;
+    if (userInput.length >= lineStart && userInput.length <= lineEnd) {
+      currentLineIndex = i;
+      break;
+    }
+    charCount += lines[i].length;
+  }
+
+  // Calculate visible lines - always show exactly 5 lines
+  let startLineIndex = 0;
+  let endLineIndex;
+
+  if (currentLineIndex >= 3) {
+    // After completing 3 lines, keep current line in the middle
+    startLineIndex = Math.max(0, currentLineIndex - 2);
+    endLineIndex = Math.min(lines.length, startLineIndex + 5);
+
+    // If near the end, adjust to show last lines
+    if (endLineIndex === lines.length && endLineIndex - startLineIndex < 5) {
+      startLineIndex = Math.max(0, endLineIndex - 5);
+    }
+  } else {
+    // Show first 5 lines initially
+    endLineIndex = Math.min(5, lines.length);
+  }
+
+  // Get visible lines
+  const visibleLines = [...lines.slice(startLineIndex, endLineIndex)];
+
+  // Pad with empty lines if we don't have 5 lines
+  const emptyLinesNeeded = Math.max(0, 5 - visibleLines.length);
+  for (let i = 0; i < emptyLinesNeeded; i++) {
+    visibleLines.push([]);
+  }
+
+  // Calculate offset for character indexing
+  let offset = 0;
+  for (let i = 0; i < startLineIndex; i++) {
+    offset += lines[i]?.length || 0;
+  }
+
+  // Render the visible lines
+  const renderedChars = [];
+  let globalIndex = offset;
+
+  visibleLines.forEach((line, lineIdx) => {
+    if (line.length === 0) {
+      // Empty line placeholder
+      renderedChars.push(
+        <div key={`empty-line-${lineIdx}`} className="tc-empty-line">
+          <span className="tc-placeholder-dots">~</span>
+        </div>,
       );
-    });
-  }, [testWords, userInput]);
+    } else {
+      // Render actual characters - normal flow
+      const lineChars = [];
+      for (let charIdx = 0; charIdx < line.length; charIdx++) {
+        const ch = line[charIdx];
+        const absoluteIndex = globalIndex + charIdx;
+        let cls = "tc-ch-pend";
+        if (absoluteIndex < userInput.length) {
+          cls = userInput[absoluteIndex] === ch ? "tc-ch-ok" : "tc-ch-err";
+        }
+        lineChars.push(
+          <span
+            key={absoluteIndex}
+            className={`${cls}${absoluteIndex === userInput.length ? " tc-ch-cur" : ""}`}
+          >
+            {ch}
+          </span>,
+        );
+      }
+
+      // Use a simple div with normal text flow
+      renderedChars.push(
+        <div key={`line-${lineIdx}`} className="tc-text-line">
+          {lineChars}
+        </div>,
+      );
+      globalIndex += line.length;
+    }
+  });
+
+  return renderedChars;
+}, [testWords, userInput]);
 
   const MODE_GROUPS = [
     {

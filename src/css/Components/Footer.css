@@ -1,11 +1,11 @@
 @import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&display=swap");
 
-.sk-footer {
+.skg-footer {
   font-family: "Syne", sans-serif;
   position: relative;
   transition: all 0.35s;
 }
-.sk-footer.dark {
+.skg-footer.dark {
   --sf-bg: #0a0b0f;
   --sf-bg2: #11131a;
   --sf-border: #252836;
@@ -14,7 +14,7 @@
   --sf-accent: #7c6af7;
   --sf-accent2: #5eead4;
 }
-.sk-footer.light {
+.skg-footer.light {
   --sf-bg: #1a1c2e;
   --sf-bg2: #11131a;
   --sf-border: #252836;
@@ -24,7 +24,7 @@
   --sf-accent2: #5eead4;
 }
 
-.sk-footer {
+.skg-footer {
   background: var(--sf-bg);
   border-top: 1px solid var(--sf-border);
   color: var(--sf-text);
@@ -176,7 +176,7 @@
   letter-spacing: 0.1em;
   margin-bottom: 0.35rem;
 }
-.sk-footer-link {
+.skg-footer-link {
   background: transparent;
   border: none;
   color: var(--sf-text2);
@@ -188,7 +188,7 @@
   padding: 0.18rem 0;
   transition: color 0.18s;
 }
-.sk-footer-link:hover {
+.skg-footer-link:hover {
   color: var(--sf-accent);
 }
 
@@ -328,7 +328,7 @@
     padding: 2rem 1.2rem;
     gap: 1.5rem;
   }
-  .sk-footer-brand {
+  .skg-footer-brand {
     grid-column: 1/-1;
   }
   .sk-footer-bottom {
