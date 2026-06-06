@@ -2639,7 +2639,7 @@
 .tc-text-disp {
   max-width: 100%;
 }
-// Add to the style section at the beginning
+
 .dr-root.dark {
   --tc-bg: #0a0b0f;
   --tc-bg2: #11131a;
