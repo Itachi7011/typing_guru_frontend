@@ -28,6 +28,9 @@ import TermsOfService from "./pages/Public/TermsOfService";
 import LanguagesDescription from "./pages/Public/LanguagesDescription";
 import ExamPractice from "./pages/Public/ExamPractice";
 
+import Analytics from "./pages/Users/Analytics";
+
+
 
 // import Error404 from './components/Error/Error404';
 
@@ -57,6 +60,8 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/languages" element={<LanguagesDescription />} />
             <Route path="/exams" element={<ExamPractice />} />
+
+            <Route path="/user/analytics" element={<Analytics />} />
             
 
             {/* <Route path="*" element={<Error404 />} /> */}

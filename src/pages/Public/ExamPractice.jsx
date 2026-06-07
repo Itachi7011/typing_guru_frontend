@@ -591,11 +591,14 @@ const HINDI_WORDS = [
 function buildText(contentType, language, examId) {
   const eng = FB.english?.words || [];
   const hindi = HINDI_WORDS;
-  const nums = () => Array.from({ length: 200 }, () => String(Math.floor(Math.random() * 9999))).join(" ");
+  const nums = () =>
+    Array.from({ length: 200 }, () =>
+      String(Math.floor(Math.random() * 9999)),
+    ).join(" ");
   const symbols = () => "@ # $ % & * ( ) - + = [ ] ; : , . / ? ! ".repeat(30);
 
   const pool = language === "hindi" ? hindi : eng;
-  
+
   // For custom mode, generate much longer text
   const isCustom = examId === "custom";
   const wordCount = isCustom ? 300 : 120;
@@ -625,18 +628,32 @@ function calcKeyDepressions(str) {
 const EP_HIST_KEY = "ep_exam_history";
 
 const INFINITE_TEXT_GENERATOR_EXAM = {
-  generateMoreText: function(contentType, language, examId) {
+  generateMoreText: function (contentType, language, examId) {
     return buildText(contentType, language, examId);
   },
-  
-  ensureBuffer: function(currentText, userInputLength, contentType, language, examId) {
+
+  ensureBuffer: function (
+    currentText,
+    userInputLength,
+    contentType,
+    language,
+    examId,
+  ) {
     const remainingChars = currentText.length - userInputLength;
     if (remainingChars < 300) {
       const newChunk = this.generateMoreText(contentType, language, examId);
       return currentText + " " + newChunk;
     }
     return currentText;
-  }
+  },
+};
+
+const calculateStableWPM = (correctChars, seconds) => {
+  // Ensure minimum time to avoid spikes
+  const safeSeconds = Math.max(seconds, 5);
+  const minutes = safeSeconds / 60;
+  const words = correctChars / 5;
+  return Math.round(words / minutes);
 };
 
 // ── MAIN COMPONENT ──────────────────────────────────────────────────────────
@@ -668,6 +685,9 @@ export default function ExamPractice() {
   const [wpmHist, setWpmHist] = useState([]);
   const [results, setResults] = useState(null);
   const [history, setHistory] = useState(() => lsGet(EP_HIST_KEY) || []);
+
+  const [rollingWPM, setRollingWPM] = useState(0);
+  const rollingWPMBufferRef = useRef([]);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
@@ -756,13 +776,18 @@ export default function ExamPractice() {
         });
       }, 1000);
       wpmTickRef.current = setInterval(() => {
-        if (startRef.current) {
-          const el = (Date.now() - startRef.current) / 1000;
-          const w = calcWPM(
-            countCorrect(userInputRef.current, testTextRef.current),
-            el,
-          );
-          setWpmHist((h) => [...h, w]);
+        if (startRef.current && running && !done) {
+          const elapsed = (Date.now() - startRef.current) / 1000;
+          // Only record WPM after 10 seconds for more stable readings
+          if (elapsed >= 10) {
+            const correct = countCorrect(
+              userInputRef.current,
+              testTextRef.current,
+            );
+            const wpm = correct / 5 / (elapsed / 60);
+            const cappedWpm = Math.min(wpm, 200);
+            setWpmHist((h) => [...h, Math.round(cappedWpm)]);
+          }
         }
       }, 5000);
     }
@@ -771,6 +796,33 @@ export default function ExamPractice() {
       clearInterval(wpmTickRef.current);
     };
   }, [running, done]);
+
+  useEffect(() => {
+    if (running && !done && startTime && userInput.length > 50) {
+      const elapsed = (Date.now() - startTime) / 1000;
+      if (elapsed >= 5) {
+        const correct = countCorrect(userInput, testText);
+        const wpm = correct / 5 / (elapsed / 60);
+        const cappedWpm = Math.min(Math.max(wpm, 0), 200);
+
+        // Maintain rolling buffer of last 3 readings
+        rollingWPMBufferRef.current = [
+          ...rollingWPMBufferRef.current,
+          Math.round(cappedWpm),
+        ].slice(-3);
+
+        // Calculate average of rolling buffer
+        if (rollingWPMBufferRef.current.length >= 2) {
+          const avgWpm =
+            rollingWPMBufferRef.current.reduce((a, b) => a + b, 0) /
+            rollingWPMBufferRef.current.length;
+          setRollingWPM(Math.round(avgWpm));
+        } else {
+          setRollingWPM(Math.round(cappedWpm));
+        }
+      }
+    }
+  }, [userInput, running, done, startTime, testText]);
 
   function playClick() {
     if (!soundOn) return;
@@ -790,46 +842,50 @@ export default function ExamPractice() {
     } catch {}
   }
 
-function handleInput(e) {
-  const val = e.target.value;
-  if (done) return;
-  if (!running) {
-    setRunning(true);
-    setStartTime(Date.now());
-    endCalledRef.current = false;
-  }
-  setUserInput(val);
-  userInputRef.current = val;
-  playClick();
-  
-  // ONLY add infinite text for Custom mode
-  if (selectedExam.isCustom) {
-    const remainingChars = testText.length - val.length;
-    if (remainingChars < 300 && !done) {
-      const newChunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
-        selectedExam.isCustom ? customContent : contentType,
-        language,
-        selectedExam.id
-      );
-      setTestText(prev => prev + " " + newChunk);
+  function handleInput(e) {
+    const val = e.target.value;
+    if (done) return;
+    if (!running) {
+      setRunning(true);
+      setStartTime(Date.now());
+      endCalledRef.current = false;
     }
-    
-    if (val.length >= testText.length && !done && !endCalledRef.current) {
-      const newChunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
-        selectedExam.isCustom ? customContent : contentType,
-        language,
-        selectedExam.id
-      );
-      setTestText(prev => prev + " " + newChunk);
-    }
-  }
-  
-  if (val.length >= testText.length && !endCalledRef.current && !selectedExam.isCustom) {
-    endTest();
-  }
-}
+    setUserInput(val);
+    userInputRef.current = val;
+    playClick();
 
-const additionalCSS = `
+    // ONLY add infinite text for Custom mode
+    if (selectedExam.isCustom) {
+      const remainingChars = testText.length - val.length;
+      if (remainingChars < 300 && !done) {
+        const newChunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
+          selectedExam.isCustom ? customContent : contentType,
+          language,
+          selectedExam.id,
+        );
+        setTestText((prev) => prev + " " + newChunk);
+      }
+
+      if (val.length >= testText.length && !done && !endCalledRef.current) {
+        const newChunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
+          selectedExam.isCustom ? customContent : contentType,
+          language,
+          selectedExam.id,
+        );
+        setTestText((prev) => prev + " " + newChunk);
+      }
+    }
+
+    if (
+      val.length >= testText.length &&
+      !endCalledRef.current &&
+      !selectedExam.isCustom
+    ) {
+      endTest();
+    }
+  }
+
+  const additionalCSS = `
   .tg-exam-pract-text-line {
     display: block;
     width: 100%;
@@ -868,56 +924,68 @@ const additionalCSS = `
   }
 `;
 
+function endTest() {
+  if (endCalledRef.current) return;
+  endCalledRef.current = true;
+  clearInterval(timerRef.current);
+  clearInterval(wpmTickRef.current);
 
-  function endTest() {
-    if (endCalledRef.current) return;
-    endCalledRef.current = true;
-    clearInterval(timerRef.current);
-    clearInterval(wpmTickRef.current);
-    const fi = userInputRef.current,
-      ft = testTextRef.current,
-      fs = startRef.current;
-    const fh = [...wpmHistRef.current];
-    const el = fs ? (Date.now() - fs) / 1000 : examConfig.durationSec;
+  const fi = userInputRef.current,
+    ft = testTextRef.current,
+    fs = startRef.current;
+  const fh = [...wpmHistRef.current];
+  const elapsed = fs ? (Date.now() - fs) / 1000 : examConfig.durationSec;
+  
+  // Calculate final WPM using total elapsed time
+  let wpm = 0;
+  if (elapsed >= 3 && fi.length > 0) {
     const correct = countCorrect(fi, ft);
-    const wpm = calcWPM(correct, el);
-    const acc = calcAccuracy(correct, fi.length || 1);
-    const cons =
-      fh.length > 1
-        ? Math.round(
-            100 -
-              ((Math.max(...fh) - Math.min(...fh)) / (Math.max(...fh) || 1)) *
-                100,
-          )
-        : 100;
-    const kd = calcKeyDepressions(fi);
-    const passed = examConfig.keyDepression
-      ? kd >= examConfig.keyDepressionRequired &&
-        acc >= examConfig.accuracyRequired
-      : wpm >= examConfig.wpmRequired && acc >= examConfig.accuracyRequired;
-
-    const res = {
-      wpm: Math.max(0, wpm),
-      accuracy: Math.max(0, Math.min(100, acc)),
-      consistency: Math.max(0, Math.min(100, cons)),
-      mistakes: fi.length - correct,
-      elapsed: Math.round(el),
-      kd,
-      passed,
-      examId: selectedExam.id,
-      examName: selectedExam.name,
-      language,
-      date: new Date().toISOString(),
-    };
-    setDone(true);
-    setRunning(false);
-    setResults(res);
-    setStartTime(null);
-    const hist = [res, ...(lsGet(EP_HIST_KEY) || [])].slice(0, 50);
-    lsSet(EP_HIST_KEY, hist);
-    setHistory(hist);
-    setShowReco(true);
+    // Use total elapsed time for final calculation
+    wpm = (correct / 5) / (elapsed / 60);
+    wpm = Math.max(0, Math.min(wpm, 200));
+  } else if (fh.length > 0) {
+    // If test was very short, use the rolling average
+    wpm = fh.reduce((a, b) => a + b, 0) / fh.length;
+  } else if (fi.length > 0) {
+    // Last resort fallback
+    const correct = countCorrect(fi, ft);
+    wpm = (correct / 5) / (Math.max(elapsed, 3) / 60);
   }
+
+  const correct = countCorrect(fi, ft);
+  const acc = calcAccuracy(correct, fi.length || 1);
+  const cons = fh.length > 1
+    ? Math.round(100 - ((Math.max(...fh) - Math.min(...fh)) / (Math.max(...fh) || 1)) * 100)
+    : 100;
+  const kd = calcKeyDepressions(fi);
+  const passed = examConfig.keyDepression
+    ? kd >= examConfig.keyDepressionRequired && acc >= examConfig.accuracyRequired
+    : wpm >= examConfig.wpmRequired && acc >= examConfig.accuracyRequired;
+
+  const res = {
+    wpm: Math.round(Math.max(0, Math.min(wpm, 200))),
+    accuracy: Math.max(0, Math.min(100, Math.round(acc))),
+    consistency: Math.max(0, Math.min(100, Math.round(cons))),
+    mistakes: fi.length - correct,
+    elapsed: Math.round(elapsed),
+    kd,
+    passed,
+    examId: selectedExam.id,
+    examName: selectedExam.name,
+    language,
+    date: new Date().toISOString(),
+  };
+
+  setDone(true);
+  setRunning(false);
+  setResults(res);
+  setStartTime(null);
+
+  const hist = [res, ...(lsGet(EP_HIST_KEY) || [])].slice(0, 50);
+  lsSet(EP_HIST_KEY, hist);
+  setHistory(hist);
+  setShowReco(true);
+}
 
   function resetTest() {
     clearInterval(timerRef.current);
@@ -941,13 +1009,27 @@ const additionalCSS = `
   // Live WPM
   const liveWPM = useMemo(() => {
     if (done && results) return results.wpm;
-    if (running && startTime)
-      return calcWPM(
-        countCorrect(userInput, testText),
-        (Date.now() - startTime) / 1000,
-      );
-    return 0;
-  }, [done, results, running, startTime, userInput, testText]);
+    if (running && startTime && userInput.length > 20) {
+      // Only calculate after enough characters
+      const elapsed = (Date.now() - startTime) / 1000;
+
+      // Minimum time threshold - don't show WPM for first 5 seconds
+      if (elapsed < 5) return 0;
+
+      const correct = countCorrect(userInput, testText);
+      // Use a longer time window for more stable calculation
+      const effectiveTime = Math.max(elapsed, 5);
+      const wpm = correct / 5 / (effectiveTime / 60);
+
+      // Cap at reasonable values
+      let cappedWpm = Math.min(wpm, 200);
+      cappedWpm = Math.max(cappedWpm, 0);
+
+      // Round to nearest integer
+      return Math.round(cappedWpm);
+    }
+    return rollingWPM || 0;
+  }, [done, results, running, startTime, userInput, testText, rollingWPM]);
 
   const liveAcc = useMemo(() => {
     if (done && results) return results.accuracy;
@@ -985,123 +1067,129 @@ const additionalCSS = `
   }, [running, done, liveWPM, liveAcc, liveKD, examConfig, timeLeft, dur]);
 
   // Rendered text
-const renderedText = useMemo(() => {
-  if (!testText) return null;
-  
-  const text = testText;
-  
-  // Function to split text into lines at word boundaries
-  const splitIntoLines = (str, maxLineLength = 75) => {
-    const lines = [];
-    let currentLine = "";
-    const words = str.split(/(\s+)/);
-    
-    for (let i = 0; i < words.length; i++) {
-      const word = words[i];
-      
-      if (word.match(/^\s+$/)) {
-        if ((currentLine + word).length <= maxLineLength) {
-          currentLine += word;
+  const renderedText = useMemo(() => {
+    if (!testText) return null;
+
+    const text = testText;
+
+    // Function to split text into lines at word boundaries
+    const splitIntoLines = (str, maxLineLength = 75) => {
+      const lines = [];
+      let currentLine = "";
+      const words = str.split(/(\s+)/);
+
+      for (let i = 0; i < words.length; i++) {
+        const word = words[i];
+
+        if (word.match(/^\s+$/)) {
+          if ((currentLine + word).length <= maxLineLength) {
+            currentLine += word;
+          } else {
+            if (currentLine) lines.push(currentLine);
+            currentLine = "";
+          }
         } else {
-          if (currentLine) lines.push(currentLine);
-          currentLine = "";
-        }
-      } else {
-        const testLine = currentLine + word;
-        if (testLine.length > maxLineLength && currentLine.length > 0) {
-          lines.push(currentLine.trimEnd());
-          currentLine = word;
-        } else {
-          currentLine = testLine;
+          const testLine = currentLine + word;
+          if (testLine.length > maxLineLength && currentLine.length > 0) {
+            lines.push(currentLine.trimEnd());
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
         }
       }
+
+      if (currentLine) lines.push(currentLine.trimEnd());
+      if (lines.length === 0) lines.push("");
+      return lines.map((line) => line.split(""));
+    };
+
+    const lines = splitIntoLines(text, 75);
+    if (lines.length === 0) return null;
+
+    // Find current line
+    let charCount = 0;
+    let currentLineIndex = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const lineStart = charCount;
+      const lineEnd = charCount + lines[i].length;
+      if (userInput.length >= lineStart && userInput.length <= lineEnd) {
+        currentLineIndex = i;
+        break;
+      }
+      charCount += lines[i].length;
     }
-    
-    if (currentLine) lines.push(currentLine.trimEnd());
-    if (lines.length === 0) lines.push("");
-    return lines.map(line => line.split(""));
-  };
-  
-  const lines = splitIntoLines(text, 75);
-  if (lines.length === 0) return null;
-  
-  // Find current line
-  let charCount = 0;
-  let currentLineIndex = 0;
-  for (let i = 0; i < lines.length; i++) {
-    const lineStart = charCount;
-    const lineEnd = charCount + lines[i].length;
-    if (userInput.length >= lineStart && userInput.length <= lineEnd) {
-      currentLineIndex = i;
-      break;
-    }
-    charCount += lines[i].length;
-  }
-  
-  // Show exactly 5 lines with current line in middle
-  let startLineIndex = 0;
-  let endLineIndex;
-  
-  if (currentLineIndex >= 3) {
-    startLineIndex = Math.max(0, currentLineIndex - 2);
-    endLineIndex = Math.min(lines.length, startLineIndex + 5);
-    if (endLineIndex === lines.length && endLineIndex - startLineIndex < 5) {
-      startLineIndex = Math.max(0, endLineIndex - 5);
-    }
-  } else {
-    endLineIndex = Math.min(5, lines.length);
-  }
-  
-  const visibleLines = [...lines.slice(startLineIndex, endLineIndex)];
-  const emptyLinesNeeded = Math.max(0, 5 - visibleLines.length);
-  for (let i = 0; i < emptyLinesNeeded; i++) visibleLines.push([]);
-  
-  // Calculate offset
-  let offset = 0;
-  for (let i = 0; i < startLineIndex; i++) {
-    offset += lines[i]?.length || 0;
-  }
-  
-  // Render
-  const renderedChars = [];
-  let globalIndex = offset;
-  
-  visibleLines.forEach((line, lineIdx) => {
-    if (line.length === 0) {
-      renderedChars.push(
-        <div key={`empty-line-${lineIdx}`} className="tg-exam-pract-empty-line">
-          <span className="tg-exam-pract-placeholder-dots">~</span>
-        </div>
-      );
+
+    // Show exactly 5 lines with current line in middle
+    let startLineIndex = 0;
+    let endLineIndex;
+
+    if (currentLineIndex >= 3) {
+      startLineIndex = Math.max(0, currentLineIndex - 2);
+      endLineIndex = Math.min(lines.length, startLineIndex + 5);
+      if (endLineIndex === lines.length && endLineIndex - startLineIndex < 5) {
+        startLineIndex = Math.max(0, endLineIndex - 5);
+      }
     } else {
-      const lineChars = [];
-      for (let charIdx = 0; charIdx < line.length; charIdx++) {
-        const ch = line[charIdx];
-        const absoluteIndex = globalIndex + charIdx;
-        let cls = "tg-exam-pract-ch-pend";
-        if (absoluteIndex < userInput.length) {
-          cls = userInput[absoluteIndex] === ch ? "tg-exam-pract-ch-ok" : "tg-exam-pract-ch-err";
-        }
-        lineChars.push(
-          <span
-            key={absoluteIndex}
-            className={`${cls}${absoluteIndex === userInput.length ? " tg-exam-pract-ch-cur" : ""}`}
-          >
-            {ch}
-          </span>
-        );
-      }
-      renderedChars.push(
-        <div key={`line-${lineIdx}`} className="tg-exam-pract-text-line">
-          {lineChars}
-        </div>
-      );
-      globalIndex += line.length;
+      endLineIndex = Math.min(5, lines.length);
     }
-  });
-  
-  return renderedChars;
-}, [testText, userInput]);
+
+    const visibleLines = [...lines.slice(startLineIndex, endLineIndex)];
+    const emptyLinesNeeded = Math.max(0, 5 - visibleLines.length);
+    for (let i = 0; i < emptyLinesNeeded; i++) visibleLines.push([]);
+
+    // Calculate offset
+    let offset = 0;
+    for (let i = 0; i < startLineIndex; i++) {
+      offset += lines[i]?.length || 0;
+    }
+
+    // Render
+    const renderedChars = [];
+    let globalIndex = offset;
+
+    visibleLines.forEach((line, lineIdx) => {
+      if (line.length === 0) {
+        renderedChars.push(
+          <div
+            key={`empty-line-${lineIdx}`}
+            className="tg-exam-pract-empty-line"
+          >
+            <span className="tg-exam-pract-placeholder-dots">~</span>
+          </div>,
+        );
+      } else {
+        const lineChars = [];
+        for (let charIdx = 0; charIdx < line.length; charIdx++) {
+          const ch = line[charIdx];
+          const absoluteIndex = globalIndex + charIdx;
+          let cls = "tg-exam-pract-ch-pend";
+          if (absoluteIndex < userInput.length) {
+            cls =
+              userInput[absoluteIndex] === ch
+                ? "tg-exam-pract-ch-ok"
+                : "tg-exam-pract-ch-err";
+          }
+          lineChars.push(
+            <span
+              key={absoluteIndex}
+              className={`${cls}${absoluteIndex === userInput.length ? " tg-exam-pract-ch-cur" : ""}`}
+            >
+              {ch}
+            </span>,
+          );
+        }
+        renderedChars.push(
+          <div key={`line-${lineIdx}`} className="tg-exam-pract-text-line">
+            {lineChars}
+          </div>,
+        );
+        globalIndex += line.length;
+      }
+    });
+
+    return renderedChars;
+  }, [testText, userInput]);
 
   const badgeClass = {
     wpm: "tg-exam-pract-badge-wpm",
@@ -1118,9 +1206,9 @@ const renderedText = useMemo(() => {
       );
 
   return (
-    <div 
+    <div
       className={`tg-exam-pract-root ${isDarkMode ? "dark" : "light"} lang-${language}`}
-    > 
+    >
       {/* BODY */}
       <div className="tg-exam-pract-body">
         {/* SIDEBAR */}

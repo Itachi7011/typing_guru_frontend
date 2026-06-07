@@ -91,9 +91,9 @@ export default function Navbar() {
       label: "Progress",
       icon: BarChart2,
       dropdown: [
-        { label: "Analytics", path: "/analytics", icon: BarChart2 },
-        { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
-        { label: "Achievements", path: "/achievements", icon: Star },
+        { label: "Analytics", path: "/user/analytics", icon: BarChart2 },
+        // { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
+        // { label: "Achievements", path: "/achievements", icon: Star },
       ],
     },
     { label: "Languages", path: "/languages", icon: Globe },

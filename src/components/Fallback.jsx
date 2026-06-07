@@ -886,10 +886,15 @@ export function shuffle(a) {
   }
   return b;
 }
+
 export function calcWPM(correctChars, seconds) {
-  if (!seconds || seconds < 1) return 0;
-  return Math.round(correctChars / 5 / (seconds / 60));
+  // Minimum time threshold to avoid unrealistic spikes
+  const safeSeconds = Math.max(seconds, 3);
+  const minutes = safeSeconds / 60;
+  const words = correctChars / 5;
+  return Math.round(words / minutes);
 }
+
 export function calcAccuracy(correct, total) {
   if (!total) return 100;
   return Math.round((correct / total) * 100);
@@ -1058,7 +1063,5 @@ export const SKILL_TREE = [
   { id: "code_typing", name: "Code Typing", xpReq: 3000 },
   { id: "master", name: "Master Typist", xpReq: 5000 },
 ];
-
-
 
 export const LS_KEY = "tc_user_data";
