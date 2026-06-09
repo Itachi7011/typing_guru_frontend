@@ -640,15 +640,15 @@ const INFINITE_TEXT_GENERATOR_EXAM = {
     examId,
   ) {
     const remainingChars = currentText.length - userInputLength;
-    if (remainingChars < 300) {
+    if (remainingChars < 300) { 
       const newChunk = this.generateMoreText(contentType, language, examId);
-      return currentText + " " + newChunk;
+      return currentText + " " + newChunk; 
     }
-    return currentText;
+    return currentText; 
   },
 };
 
-const calculateStableWPM = (correctChars, seconds) => {
+const calculateStableWPM = (correctChars, seconds) => { 
   // Ensure minimum time to avoid spikes
   const safeSeconds = Math.max(seconds, 5);
   const minutes = safeSeconds / 60;
