@@ -644,9 +644,9 @@ const INFINITE_TEXT_GENERATOR_EXAM = {
       const newChunk = this.generateMoreText(contentType, language, examId);
       return currentText + " " + newChunk; 
     }
-    return currentText; 
+    return currentText;  
   },
-};
+}; 
 
 const calculateStableWPM = (correctChars, seconds) => { 
   // Ensure minimum time to avoid spikes
@@ -1049,22 +1049,22 @@ function endTest() {
   const timerPct = (timeLeft / dur) * 100;
   const timerColor =
     timerPct > 50 ? "#10b981" : timerPct > 20 ? "#f59e0b" : "#ef4444";
-  const ringR = 27,
-    ringCirc = 2 * Math.PI * ringR;
-
-  const onTrack = useMemo(() => {
-    if (!running && !done) return null;
-    if (examConfig.keyDepression)
-      return (
+  const ringR = 27, 
+    ringCirc = 2 * Math.PI * ringR; 
+ 
+  const onTrack = useMemo(() => { 
+    if (!running && !done) return null; 
+    if (examConfig.keyDepression)  
+      return ( 
         liveKD >=
-          (examConfig.keyDepressionRequired || 2000) * (1 - timeLeft / dur) &&
-        liveAcc >= examConfig.accuracyRequired
-      );
+          (examConfig.keyDepressionRequired || 2000) * (1 - timeLeft / dur) &&  
+        liveAcc >= examConfig.accuracyRequired  
+      );  
     return (
-      liveWPM >= examConfig.wpmRequired &&
-      liveAcc >= examConfig.accuracyRequired
-    );
-  }, [running, done, liveWPM, liveAcc, liveKD, examConfig, timeLeft, dur]);
+      liveWPM >= examConfig.wpmRequired && 
+      liveAcc >= examConfig.accuracyRequired 
+    ); 
+  }, [running, done, liveWPM, liveAcc, liveKD, examConfig, timeLeft, dur]); 
 
   // Rendered text
   const renderedText = useMemo(() => {
