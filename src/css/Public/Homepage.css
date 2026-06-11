@@ -2682,3 +2682,89 @@
   --tc-pend: #9096b0;
   --tc-cur: #5b4ee8;
 }
+
+/* Smooth cursor animation */
+.tc-ch-cur {
+  position: relative;
+  animation: cursorPulse 0.5s ease-in-out;
+}
+
+@keyframes cursorPulse {
+  0% {
+    opacity: 0.5;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Optional: Add a subtle transition for character changes */
+.tc-ch-ok,
+.tc-ch-err,
+.tc-ch-pend {
+  transition: color 0.05s ease;
+}
+
+/* Make spaces more visible (optional) */
+.tc-ch-ok:has(+ .tc-ch-ok),
+.tc-ch-pend:has(+ .tc-ch-pend) {
+  /* Normal spacing */
+}
+
+/* Highlight spaces slightly */
+.tc-ch-ok:contains(" "),
+.tc-ch-err:contains(" "),
+.tc-ch-pend:contains(" ") {
+  background: rgba(124, 106, 247, 0.1);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+/* Add or update these CSS rules */
+.tc-text-line {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: normal;
+  letter-spacing: normal;
+}
+
+.tc-text-line span {
+  display: inline;
+  white-space: pre;
+  letter-spacing: normal;
+}
+
+/* Make space characters visible but not intrusive */
+.tc-space-char {
+  display: inline-block;
+  min-width: 0.3em;
+}
+
+/* Optional: Add a subtle background to spaces for debugging (remove in production) */
+/* .tc-space-char {
+  background: rgba(100, 100, 255, 0.1);
+} */
+
+.tc-empty-line {
+  height: 1.8rem;
+  opacity: 0.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-top: 1px dashed var(--tc-border);
+  margin: 0.25rem 0;
+}
+
+.tc-placeholder-dots {
+  color: var(--tc-text3);
+  font-size: 0.8rem;
+  opacity: 0.5;
+  font-family: "JetBrains Mono", monospace;
+}
