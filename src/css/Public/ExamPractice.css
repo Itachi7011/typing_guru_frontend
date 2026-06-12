@@ -74,100 +74,6 @@
   --ep-mono: "JetBrains Mono", monospace;
 }
 
-/* ── TOPBAR ── */
-.tg-exam-pract-topbar {
-  background: var(--ep-bg2);
-  border-bottom: 1px solid var(--ep-border);
-  position: sticky;
-  top: 0;
-  z-index: 200;
-}
-.tg-exam-pract-topbar-inner {
-  max-width: 1280px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 1.5rem;
-  flex-wrap: wrap;
-}
-.tg-exam-pract-logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: var(--ep-text);
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: -0.02em;
-  margin-right: 0.75rem;
-}
-.tg-exam-pract-logo-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--ep-accent), var(--ep-accent2));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-.tg-exam-pract-page-title {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--ep-text2);
-  padding: 0.3rem 0.75rem;
-  background: var(--ep-bg3);
-  border: 1px solid var(--ep-border);
-  border-radius: 8px;
-}
-.tg-exam-pract-topbar-right {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.tg-exam-pract-icon-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  border: 1px solid var(--ep-border);
-  background: var(--ep-bg3);
-  color: var(--ep-text2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.tg-exam-pract-icon-btn:hover {
-  border-color: var(--ep-accent);
-  color: var(--ep-accent);
-}
-.tg-exam-pract-back-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.38rem 0.85rem;
-  border-radius: 8px;
-  border: 1px solid var(--ep-border);
-  background: var(--ep-bg3);
-  color: var(--ep-text2);
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-}
-.tg-exam-pract-back-btn:hover {
-  border-color: var(--ep-accent);
-  color: var(--ep-accent);
-}
-
 /* ── PAGE BODY ── */
 .tg-exam-pract-body {
   max-width: 1580px;
@@ -177,21 +83,77 @@
   grid-template-columns: 400px 1fr;
   gap: 1.25rem;
   align-items: start;
-}
-@media (max-width: 960px) {
-  .tg-exam-pract-body {
-    grid-template-columns: 1fr;
-  }
+  position: relative;
 }
 
-/* ── SIDEBAR PANEL ── */
+/* ── SIDEBAR ── */
 .tg-exam-pract-sidebar {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   position: sticky;
-  top: 64px;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ep-accent) transparent;
 }
+.tg-exam-pract-sidebar::-webkit-scrollbar {
+  width: 3px;
+}
+.tg-exam-pract-sidebar::-webkit-scrollbar-thumb {
+  background: var(--ep-accent);
+  border-radius: 3px;
+}
+
+/* Mobile sidebar header (hidden on desktop) */
+.tg-exam-pract-sidebar-mobile-header {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--ep-border);
+  flex-shrink: 0;
+}
+.tg-exam-pract-sidebar-mobile-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--ep-text);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.tg-exam-pract-sidebar-close-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--ep-border);
+  background: var(--ep-bg3);
+  color: var(--ep-text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tg-exam-pract-sidebar-close-btn:hover {
+  border-color: var(--ep-accent);
+  color: var(--ep-accent);
+}
+
+/* Mobile toggle button (hidden on desktop) */
+.tg-exam-pract-sidebar-toggle {
+  display: none;
+}
+
+/* Mobile backdrop */
+.tg-exam-pract-backdrop {
+  display: none;
+}
+
+/* ── PANEL ── */
 .tg-exam-pract-panel {
   background: var(--ep-bg2);
   border: 1px solid var(--ep-border);
@@ -233,7 +195,6 @@
   background: var(--ep-accent);
   border-radius: 3px;
 }
-
 .tg-exam-pract-exam-btn {
   display: flex;
   align-items: center;
@@ -388,12 +349,12 @@
   outline: none;
   transition: border-color 0.2s;
   width: 100%;
+  box-sizing: border-box;
 }
 .tg-exam-pract-field-select:focus,
 .tg-exam-pract-field-input:focus {
   border-color: var(--ep-accent);
 }
-
 .tg-exam-pract-toggle-row {
   display: flex;
   align-items: center;
@@ -548,6 +509,7 @@
 /* Timer Ring */
 .tg-exam-pract-timer-ring {
   display: block;
+  flex-shrink: 0;
 }
 .tg-exam-pract-ring-bg {
   stroke: var(--ep-border);
@@ -638,7 +600,40 @@
   user-select: none;
   word-break: break-word;
   margin-bottom: 1rem;
-  min-height: 90px;
+  min-height: 250px;
+  display: block;
+}
+.tg-exam-pract-text-line {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-family: var(--ep-mono, "JetBrains Mono", monospace);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: normal;
+  letter-spacing: normal;
+}
+.tg-exam-pract-text-line span {
+  display: inline;
+  white-space: pre;
+  letter-spacing: normal;
+}
+.tg-exam-pract-empty-line {
+  height: 1.8rem;
+  opacity: 0.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-top: 1px dashed var(--ep-border);
+  margin: 0.25rem 0;
+}
+.tg-exam-pract-placeholder-dots {
+  color: var(--ep-text3);
+  font-size: 0.8rem;
+  opacity: 0.5;
+  font-family: "JetBrains Mono", monospace;
 }
 .tg-exam-pract-ch-ok {
   color: var(--ep-correct);
@@ -797,7 +792,6 @@
   border: 2px solid var(--ep-accent);
   color: var(--ep-accent);
 }
-
 .tg-exam-pract-stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -836,7 +830,6 @@
   font-size: 0.62rem;
   color: var(--ep-text3);
 }
-/* stat colors */
 .tg-exam-pract-sc-blue .tg-exam-pract-stat-icon,
 .tg-exam-pract-sc-blue .tg-exam-pract-stat-val {
   color: var(--ep-blue);
@@ -933,11 +926,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.6rem;
-}
-@media (max-width: 640px) {
-  .tg-exam-pract-reco-grid {
-    grid-template-columns: 1fr;
-  }
 }
 .tg-exam-pract-reco-card {
   display: flex;
@@ -1044,18 +1032,6 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-@media (max-width: 680px) {
-  .tg-exam-pract-hist-head,
-  .tg-exam-pract-hist-row {
-    grid-template-columns: 1.4fr 0.8fr 0.8fr 0.8fr;
-  }
-  .tg-exam-pract-hist-head span:nth-child(5),
-  .tg-exam-pract-hist-head span:nth-child(6),
-  .tg-exam-pract-hist-row span:nth-child(5),
-  .tg-exam-pract-hist-row span:nth-child(6) {
-    display: none;
-  }
-}
 
 /* ── SECTION LABEL ── */
 .tg-exam-pract-section-lbl {
@@ -1078,84 +1054,315 @@
   font-size: 0.82rem;
 }
 
-/* ── RESPONSIVE ── */
-@media (max-width: 960px) {
-  .tg-exam-pract-sidebar {
-    position: static;
-  }
-  .tg-exam-pract-exam-list {
-    max-height: 200px;
-  }
+/* ══════════════════════════════════════════════
+   RESPONSIVE — TABLET (≤ 1024px)
+══════════════════════════════════════════════ */
+@media (max-width: 1024px) {
   .tg-exam-pract-body {
-    padding: 1rem 1rem 2.5rem;
+    grid-template-columns: 320px 1fr;
+    gap: 1rem;
+    padding: 1.25rem 1.25rem 2.5rem;
   }
 }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — SMALL TABLET / MOBILE BREAKPOINT (≤ 900px)
+   Sidebar becomes a slide-in drawer
+══════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  /* Switch body to single column */
+  .tg-exam-pract-body {
+    grid-template-columns: 1fr;
+    padding: 1rem 1rem 2.5rem;
+    padding-top: 4rem; /* space for floating toggle */
+  }
+
+  /* Sidebar: becomes fixed full-height drawer */
+  .tg-exam-pract-sidebar {
+    position: fixed;
+    top: 0;
+    left: -105%;
+    width: min(340px, 88vw);
+    height: 100%;
+    max-height: 100vh;
+    z-index: 500;
+    background: var(--ep-bg2);
+    border-right: 1px solid var(--ep-border);
+    border-radius: 0 16px 16px 0;
+    box-shadow: var(--ep-shadow);
+    padding: 0;
+    overflow-y: auto;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    gap: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .tg-exam-pract-sidebar > * {
+    flex-shrink: 0;
+    margin: 0.5rem 0.75rem 0;
+    border-radius: 12px;
+  }
+  .tg-exam-pract-sidebar > *:last-child {
+    margin-bottom: 2rem;
+  }
+  /* Open state */
+  .tg-exam-pract-sidebar.tg-exam-pract-sidebar-open {
+    left: 0;
+  }
+
+  /* Show mobile header inside sidebar */
+  .tg-exam-pract-sidebar-mobile-header {
+    display: flex;
+    position: sticky;
+    top: 0;
+    background: var(--ep-bg2);
+    z-index: 10;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    border-bottom: 1px solid var(--ep-border);
+  }
+
+  /* Backdrop */
+  .tg-exam-pract-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 490;
+    animation: tg-ep-fadeIn 0.2s ease;
+  }
+  @keyframes tg-ep-fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Floating sidebar toggle button */
+  .tg-exam-pract-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    z-index: 400;
+    padding: 0.48rem 0.9rem 0.48rem 0.7rem;
+    border-radius: 10px;
+    border: 1px solid var(--ep-border);
+    background: var(--ep-bg2);
+    color: var(--ep-text);
+    font-family: "Syne", sans-serif;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+    transition: all 0.2s;
+  }
+  .tg-exam-pract-sidebar-toggle:hover {
+    border-color: var(--ep-accent);
+    color: var(--ep-accent);
+  }
+
+  /* Exam list taller on mobile drawer */
+  .tg-exam-pract-exam-list {
+    max-height: none;
+  }
+
+  /* Text display - smaller font on tablet */
+  .tg-exam-pract-text-display {
+    font-size: 0.98rem;
+    min-height: 200px;
+  }
+  .tg-exam-pract-text-line {
+    font-size: 0.98rem;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤ 640px)
+══════════════════════════════════════════════ */
 @media (max-width: 640px) {
+  .tg-exam-pract-body {
+    padding: 0.85rem 0.75rem 2rem;
+    padding-top: 3.75rem;
+  }
+
+  /* Live bar compact */
   .tg-exam-pract-live-bar {
-    padding: 0.7rem 0.9rem;
+    padding: 0.65rem 0.85rem;
     gap: 0.5rem;
+    justify-content: center;
   }
   .tg-exam-pract-live-val {
     font-size: 1.35rem;
   }
+  .tg-exam-pract-live-lbl {
+    font-size: 0.52rem;
+  }
+  .tg-exam-pract-live-target {
+    font-size: 0.55rem;
+  }
+
+  /* Timer ring smaller */
+  /* .tg-exam-pract-timer-ring {
+    width: 56px;
+    height: 56px;
+  } */
+
+  /* Stat grid: 2 cols */
   .tg-exam-pract-stat-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
   }
-  .tg-exam-pract-topbar-inner {
-    padding: 0.6rem 1rem;
+  .tg-exam-pract-stat-card {
+    padding: 0.7rem 0.5rem;
   }
+  .tg-exam-pract-stat-val {
+    font-size: 1.1rem;
+  }
+
+  /* Recommendations: 1 col */
+  .tg-exam-pract-reco-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Type wrap */
+  .tg-exam-pract-type-wrap {
+    padding: 1rem 0.85rem;
+  }
+  .tg-exam-pract-text-display {
+    font-size: 0.92rem;
+    min-height: 180px;
+    line-height: 1.85;
+  }
+  .tg-exam-pract-text-line {
+    font-size: 0.92rem;
+    line-height: 1.85;
+  }
+  .tg-exam-pract-textarea {
+    font-size: 0.88rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  /* Buttons */
+  .tg-exam-pract-btn {
+    font-size: 0.76rem;
+    padding: 0.45rem 0.9rem;
+  }
+
+  /* Actions wrap tighter */
+  .tg-exam-pract-actions {
+    gap: 0.45rem;
+  }
+
+  /* Custom grid: 1 col */
   .tg-exam-pract-custom-grid {
     grid-template-columns: 1fr;
   }
-  .tg-exam-pract-body {
-    padding: 0.85rem 0.75rem 2rem;
+
+  /* Pass bar */
+  .tg-exam-pract-pass-bar {
+    font-size: 0.72rem;
+    padding: 0.5rem 0.85rem;
+    gap: 0.5rem;
   }
-}
-@media (max-width: 420px) {
-  .tg-exam-pract-live-val {
-    font-size: 1.1rem;
+  .tg-exam-pract-pass-criteria {
+    font-size: 0.62rem;
   }
-  .tg-exam-pract-type-wrap {
-    padding: 1rem;
+
+  /* Results panel padding */
+  .tg-exam-pract-results {
+    padding: 1.1rem;
   }
-  .tg-exam-pract-text-display {
-    font-size: 0.9rem;
+
+  /* History table: hide KD and Date columns */
+  .tg-ep-hide-xs {
+    display: none;
+  }
+  .tg-exam-pract-hist-head,
+  .tg-exam-pract-hist-row {
+    grid-template-columns: 1.6fr 0.8fr 0.8fr 1fr;
+  }
+
+  /* Pass bar criteria on its own line */
+  .tg-exam-pract-pass-criteria {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  /* Sidebar toggle a bit smaller */
+  .tg-exam-pract-sidebar-toggle {
+    font-size: 0.72rem;
+    padding: 0.42rem 0.75rem 0.42rem 0.6rem;
+    top: 3.5rem;
+    left: 10px;
   }
 }
 
-.tg-exam-pract-text-line {
-  display: block;
-  width: 100%;
-  margin-bottom: 0.25rem;
-  font-family: var(--ep-mono, "JetBrains Mono", monospace);
-  font-size: 1.05rem;
-  line-height: 1.8;
-  white-space: pre-wrap;
-  word-break: normal;
-  letter-spacing: normal;
+/* ══════════════════════════════════════════════
+   RESPONSIVE — SMALL MOBILE (≤ 420px)
+══════════════════════════════════════════════ */
+@media (max-width: 420px) {
+  .tg-exam-pract-body {
+    padding: 0.75rem 0.6rem 1.75rem;
+    padding-top: 3.5rem;
+  }
+
+  .tg-exam-pract-live-val {
+    font-size: 1.1rem;
+  }
+  .tg-exam-pract-live-bar {
+    padding: 0.55rem 0.65rem;
+  }
+
+  .tg-exam-pract-type-wrap {
+    padding: 0.85rem 0.7rem;
+  }
+  .tg-exam-pract-text-display {
+    font-size: 0.85rem;
+    min-height: 160px;
+  }
+  .tg-exam-pract-text-line {
+    font-size: 0.85rem;
+    line-height: 1.75;
+  }
+
+  .tg-exam-pract-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tg-exam-pract-stat-val {
+    font-size: 1rem;
+  }
+
+  .tg-exam-pract-results {
+    padding: 0.9rem;
+  }
+
+  .tg-exam-pract-verdict {
+    padding: 0.85rem 1rem;
+  }
+
+  /* Tighter history on very small screens */
+  .tg-exam-pract-hist-head,
+  .tg-exam-pract-hist-row {
+    grid-template-columns: 1.5fr 0.7fr 0.7fr 0.9fr;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.68rem;
+  }
 }
-.tg-exam-pract-text-line span {
-  display: inline;
-  white-space: pre;
-  letter-spacing: normal;
+
+/* ══════════════════════════════════════════════
+   UTILITY — history columns hidden on xs
+══════════════════════════════════════════════ */
+/* Default: visible */
+.tg-ep-hide-xs {
+  display: table-cell;
 }
-.tg-exam-pract-empty-line {
-  height: 1.8rem;
-  opacity: 0.3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  border-top: 1px dashed var(--ep-border);
-  margin: 0.25rem 0;
-}
-.tg-exam-pract-placeholder-dots {
-  color: var(--ep-text3);
-  font-size: 0.8rem;
-  opacity: 0.5;
-  font-family: "JetBrains Mono", monospace;
-}
-.tg-exam-pract-text-display {
-  min-height: 250px;
-  display: block;
+@media (max-width: 640px) {
+  .tg-ep-hide-xs {
+    display: none !important;
+  }
 }

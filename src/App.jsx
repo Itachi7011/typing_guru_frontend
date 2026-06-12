@@ -9,6 +9,7 @@ import "./css/Public/AboutAndContactUs.css"
 import "./css/Public/PrivacyAndTermsAndLanguages.css"
 import "./css/Public/ExamPractice.css"
 import "./css/Public/Home_Sidebar.css"
+import "./css/Public/Drill.css"
 
 
 import "./css/Components/Navbar.css"

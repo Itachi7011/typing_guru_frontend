@@ -1,0 +1,1173 @@
+/* ── DRILL PAGE – RESPONSIVE STYLESHEET ─────────────────────────────────── */
+/* Drop this file next to Drill.jsx and import it at the top:                */
+/* import "./Drill.css";                                                      */
+
+/* ── THEME TOKENS ─────────────────────────────────────────────────────────── */
+.dr-root.dark {
+  --tc-bg: #0a0b0f;
+  --tc-bg2: #11131a;
+  --tc-bg3: #181b25;
+  --tc-border: #252836;
+  --tc-text: #e8eaf6;
+  --tc-text2: #8b90a4;
+  --tc-text3: #555b6e;
+  --tc-accent: #7c6af7;
+  --tc-accent2: #5eead4;
+  --tc-red: #ef4444;
+  --tc-green: #10b981;
+  --tc-yellow: #f59e0b;
+  --tc-blue: #3b82f6;
+  --tc-purple: #a855f7;
+  --tc-pend: #555b6e;
+  --tc-cur: #7c6af7;
+}
+
+.dr-root.light {
+  --tc-bg: #f4f5fb;
+  --tc-bg2: #fff;
+  --tc-bg3: #eef0f8;
+  --tc-border: #d8dbe8;
+  --tc-text: #1a1c2e;
+  --tc-text2: #5a5f78;
+  --tc-text3: #9096b0;
+  --tc-accent: #5b4ee8;
+  --tc-accent2: #0d9488;
+  --tc-red: #dc2626;
+  --tc-green: #059669;
+  --tc-yellow: #d97706;
+  --tc-blue: #2563eb;
+  --tc-purple: #9333ea;
+  --tc-pend: #9096b0;
+  --tc-cur: #5b4ee8;
+}
+
+/* ── BASE ─────────────────────────────────────────────────────────────────── */
+.dr-root {
+  min-height: 100vh;
+  background: var(--tc-bg);
+  color: var(--tc-text);
+  font-family: "Syne", sans-serif;
+}
+
+.dr-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem 1.2rem;
+}
+
+/* ── CHARACTER STYLES ─────────────────────────────────────────────────────── */
+.dr-ch-ok {
+  color: var(--tc-green);
+}
+.dr-ch-err {
+  color: var(--tc-red);
+  text-decoration: underline wavy;
+}
+.dr-ch-pend {
+  color: var(--tc-text3);
+}
+
+.dr-ch-cur {
+  position: relative;
+}
+.dr-ch-cur::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  background: var(--tc-cur);
+  border-radius: 2px;
+  animation: dr-blink 1s step-end infinite;
+}
+
+@keyframes dr-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ── LINE DISPLAY ─────────────────────────────────────────────────────────── */
+.dr-text-line {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(0.82rem, 2vw, 1.05rem);
+  line-height: 1.8;
+  white-space: pre-wrap;
+  word-break: normal;
+  letter-spacing: normal;
+}
+
+.dr-text-line span {
+  display: inline;
+  white-space: pre;
+  letter-spacing: normal;
+}
+
+.dr-empty-line {
+  height: 1.8rem;
+  opacity: 0.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-top: 1px dashed var(--tc-border);
+  margin: 0.25rem 0;
+}
+
+.dr-placeholder-dots {
+  color: var(--tc-text3);
+  font-size: 0.8rem;
+  opacity: 0.5;
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* Language-specific fonts */
+.dr-root.language-hindi .dr-text-line,
+.dr-root.language-hindi .dr-ch-ok,
+.dr-root.language-hindi .dr-ch-err,
+.dr-root.language-hindi .dr-ch-pend {
+  font-family:
+    "Noto Sans Devanagari", "Mangal", "Nirmala UI", "JetBrains Mono", monospace;
+}
+
+.dr-root.language-spanish .dr-text-line,
+.dr-root.language-spanish .dr-ch-ok,
+.dr-root.language-spanish .dr-ch-err,
+.dr-root.language-spanish .dr-ch-pend {
+  font-family: "JetBrains Mono", monospace;
+}
+
+/* ── TYPING AREA ─────────────────────────────────────────────────────────── */
+.dr-type-area {
+  background: var(--tc-bg2);
+  border: 1px solid var(--tc-border);
+  border-radius: 12px;
+  padding: 1.2rem;
+  transition: border-color 0.2s;
+}
+
+.dr-type-area:focus-within {
+  border-color: var(--tc-accent);
+}
+
+.dr-text-disp {
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(0.82rem, 2vw, 1.05rem);
+  line-height: 2;
+  margin-bottom: 0.8rem;
+  user-select: none;
+  word-break: normal;
+  white-space: normal;
+  min-height: 220px;
+  display: block;
+  width: 100%;
+}
+
+.dr-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  background: var(--tc-bg3);
+  border: 1px solid var(--tc-border);
+  border-radius: 9px;
+  color: var(--tc-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(0.8rem, 2.2vw, 0.95rem);
+  resize: vertical;
+  transition: border-color 0.2s;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.dr-input:focus {
+  border-color: var(--tc-accent);
+}
+.dr-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────────────── */
+.dr-layout {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 1.2rem;
+  align-items: start;
+}
+
+/* ── SETTINGS PANEL ──────────────────────────────────────────────────────── */
+.dr-settings {
+  background: var(--tc-bg2);
+  border: 1px solid var(--tc-border);
+  border-radius: 14px;
+  overflow: hidden;
+  /* Sticky sidebar on desktop */
+  position: sticky;
+  top: 1rem;
+}
+
+.dr-settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: var(--tc-bg3);
+  border-bottom: 1px solid var(--tc-border);
+}
+
+.dr-settings-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.dr-settings-body {
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--tc-border) transparent;
+}
+
+.dr-settings-body::-webkit-scrollbar {
+  width: 4px;
+}
+.dr-settings-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.dr-settings-body::-webkit-scrollbar-thumb {
+  background: var(--tc-border);
+  border-radius: 4px;
+}
+
+/* ── SIDEBAR TOGGLE BUTTON (mobile) ─────────────────────────────────────── */
+.dr-sidebar-toggle {
+  display: none; /* hidden on desktop */
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  background: var(--tc-bg2);
+  border: 1px solid var(--tc-border);
+  border-radius: 9px;
+  color: var(--tc-text2);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+}
+
+.dr-sidebar-toggle:hover,
+.dr-sidebar-toggle.open {
+  border-color: var(--tc-accent);
+  color: var(--tc-accent);
+}
+
+.dr-sidebar-toggle svg {
+  transition: transform 0.25s ease;
+}
+
+.dr-sidebar-toggle.open svg {
+  transform: rotate(180deg);
+}
+
+/* ── TARGETS AREA ────────────────────────────────────────────────────────── */
+.dr-targets-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dr-targets-title {
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--tc-text3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.dr-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  min-height: 32px;
+  padding: 0.35rem;
+  background: var(--tc-bg3);
+  border: 1px solid var(--tc-border);
+  border-radius: 8px;
+}
+
+.dr-chips-empty {
+  font-size: 0.72rem;
+  color: var(--tc-text3);
+  padding: 0.1rem 0.2rem;
+}
+
+.dr-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 5px;
+  background: rgba(124, 106, 247, 0.15);
+  border: 1px solid rgba(124, 106, 247, 0.3);
+}
+
+.dr-chip-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--tc-accent);
+}
+
+.dr-chip-rm {
+  background: transparent;
+  border: none;
+  color: var(--tc-text3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 1px;
+  border-radius: 3px;
+}
+
+.dr-chip-rm:hover {
+  color: var(--tc-red);
+}
+
+/* ── PICKER TABS ─────────────────────────────────────────────────────────── */
+.dr-picker-tabs {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.dr-picker-tab {
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-bg3);
+  color: var(--tc-text3);
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.dr-picker-tab.active {
+  background: var(--tc-accent);
+  border-color: var(--tc-accent);
+  color: #fff;
+}
+
+/* ── CHAR GRID ───────────────────────────────────────────────────────────── */
+.dr-char-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.dr-char-group-label {
+  width: 100%;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--tc-accent);
+  margin: 0.5rem 0 0.25rem 0;
+  padding-left: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dr-char-group-label:first-of-type {
+  margin-top: 0;
+}
+
+.dr-char-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-bg3);
+  color: var(--tc-text2);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.dr-char-btn:hover {
+  border-color: var(--tc-accent);
+  color: var(--tc-accent);
+}
+.dr-char-btn.selected {
+  background: var(--tc-accent);
+  border-color: var(--tc-accent);
+  color: #fff;
+}
+
+/* ── COMMON PAIRS ────────────────────────────────────────────────────────── */
+.dr-common-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  max-height: 130px;
+  overflow-y: auto;
+}
+
+.dr-pair-btn {
+  padding: 0.18rem 0.45rem;
+  border-radius: 5px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-bg3);
+  color: var(--tc-text2);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.dr-pair-btn:hover,
+.dr-pair-btn.selected {
+  border-color: var(--tc-accent);
+  color: var(--tc-accent);
+}
+
+/* ── CUSTOM INPUT ROW ────────────────────────────────────────────────────── */
+.dr-custom-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.dr-custom-inp {
+  flex: 1;
+  padding: 0.38rem 0.65rem;
+  border-radius: 7px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-bg3);
+  color: var(--tc-text);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.dr-custom-inp:focus {
+  border-color: var(--tc-accent);
+}
+
+.dr-add-btn {
+  padding: 0.38rem 0.75rem;
+  border-radius: 7px;
+  border: none;
+  background: var(--tc-accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── MODE GRID ───────────────────────────────────────────────────────────── */
+.dr-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem;
+}
+
+.dr-mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.3rem;
+  border-radius: 8px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-bg3);
+  color: var(--tc-text2);
+  font-family: inherit;
+  font-size: 0.65rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.dr-mode-btn:hover,
+.dr-mode-btn.active {
+  border-color: var(--tc-accent);
+  color: var(--tc-accent);
+}
+
+/* ── DURATION ROW ────────────────────────────────────────────────────────── */
+.dr-dur-row {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.dr-dur-btn {
+  padding: 0.25rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-bg3);
+  color: var(--tc-text2);
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.dr-dur-btn:hover,
+.dr-dur-btn.active {
+  background: var(--tc-accent);
+  border-color: var(--tc-accent);
+  color: #fff;
+}
+
+/* ── OPTIONS ROW ─────────────────────────────────────────────────────────── */
+.dr-opt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--tc-text2);
+}
+
+.dr-opt-lbl {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* ── PRACTICE AREA ───────────────────────────────────────────────────────── */
+.dr-practice {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0; /* prevent grid blowout */
+}
+
+/* ── LIVE STATS BAR ──────────────────────────────────────────────────────── */
+.dr-live-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: var(--tc-bg2);
+  border: 1px solid var(--tc-border);
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+}
+
+.dr-live-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.1rem;
+}
+
+.dr-live-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: var(--tc-text);
+}
+
+.dr-live-lbl {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--tc-text3);
+}
+
+/* ── ACTIONS ─────────────────────────────────────────────────────────────── */
+.dr-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── RESULTS ─────────────────────────────────────────────────────────────── */
+.dr-results {
+  background: var(--tc-bg2);
+  border: 1px solid var(--tc-border);
+  border-radius: 14px;
+  padding: 1.25rem;
+  animation: tc-slideUp 0.3s ease;
+}
+
+.dr-res-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--tc-green);
+  margin-bottom: 1rem;
+}
+
+.dr-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.dr-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.7rem 0.6rem;
+  border-radius: 10px;
+  border: 1px solid var(--tc-border);
+  background: var(--tc-bg3);
+}
+
+.dr-stat-icon {
+  opacity: 0.7;
+}
+
+.dr-stat-val {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.dr-stat-lbl {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--tc-text3);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ── ERROR GRID ──────────────────────────────────────────────────────────── */
+.dr-err-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.dr-err-chip {
+  padding: 0.22rem 0.55rem;
+  border-radius: 5px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: var(--tc-red);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* ── HISTORY ─────────────────────────────────────────────────────────────── */
+.dr-history {
+  margin-top: 1rem;
+}
+
+.dr-hist-head {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  padding: 0.45rem 0.8rem;
+  background: var(--tc-bg3);
+  border-radius: 8px 8px 0 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: var(--tc-text3);
+  text-transform: uppercase;
+}
+
+.dr-hist-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+  padding: 0.5rem 0.8rem;
+  border-top: 1px solid var(--tc-border);
+  font-size: 0.75rem;
+  color: var(--tc-text2);
+  transition: background 0.15s;
+}
+
+.dr-hist-row:hover {
+  background: var(--tc-bg3);
+}
+
+.dr-hist-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.dr-hist-t {
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(124, 106, 247, 0.12);
+  color: var(--tc-accent);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.65rem;
+}
+
+/* ── MOTIVATIONAL BAR ────────────────────────────────────────────────────── */
+.dr-motiv {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.9rem;
+  background: linear-gradient(
+    135deg,
+    rgba(124, 106, 247, 0.08),
+    rgba(94, 234, 212, 0.05)
+  );
+  border: 1px solid var(--tc-accent);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: var(--tc-text2);
+  margin-bottom: 0.8rem;
+}
+
+/* ── CLEAR BTN ───────────────────────────────────────────────────────────── */
+.dr-clear-btn {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.18rem 0.45rem;
+  border-radius: 5px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: var(--tc-red);
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.dr-clear-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+}
+
+/* ── SHARED BUTTON STYLES ────────────────────────────────────────────────── */
+.tc-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 9px;
+  border: none;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.15s,
+    border-color 0.15s;
+}
+
+.tc-btn-sec {
+  background: var(--tc-bg3);
+  border: 1px solid var(--tc-border);
+  color: var(--tc-text2);
+}
+
+.tc-btn-sec:hover {
+  border-color: var(--tc-accent);
+  color: var(--tc-accent);
+}
+
+.tc-btn-acc {
+  background: linear-gradient(135deg, var(--tc-accent), var(--tc-purple));
+  color: #fff;
+}
+
+.tc-btn-acc:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* ── TOGGLE ──────────────────────────────────────────────────────────────── */
+.tc-toggle {
+  width: 36px;
+  height: 19px;
+  border-radius: 10px;
+  background: var(--tc-bg3);
+  border: 1px solid var(--tc-border);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.tc-toggle::after {
+  content: "";
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--tc-text3);
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+.tc-toggle-on {
+  background: var(--tc-accent);
+  border-color: var(--tc-accent);
+}
+.tc-toggle-on::after {
+  transform: translateX(17px);
+  background: #fff;
+}
+
+/* ── PROGRESS RING ───────────────────────────────────────────────────────── */
+.tc-pring-bg {
+  stroke: var(--tc-border);
+}
+.tc-pring-txt {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--tc-text);
+}
+
+/* ── CHART TITLE ─────────────────────────────────────────────────────────── */
+.tc-chart-ttl {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--tc-text2);
+  text-transform: uppercase;
+  margin-bottom: 0.65rem;
+}
+
+/* ── STAT COLORS ─────────────────────────────────────────────────────────── */
+.tc-c-blue {
+  color: var(--tc-blue);
+}
+.tc-c-green {
+  color: var(--tc-green);
+}
+.tc-c-purple {
+  color: var(--tc-purple);
+}
+.tc-c-red {
+  color: var(--tc-red);
+}
+
+/* ── ANIMATIONS ──────────────────────────────────────────────────────────── */
+@keyframes tc-slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* ── RESPONSIVE ────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── TABLET: 861 – 1100px ────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .dr-layout {
+    grid-template-columns: 260px 1fr;
+    gap: 1rem;
+  }
+}
+
+/* ── TABLET / SMALL DESKTOP: ≤ 860px ────────────────────────────────────── */
+@media (max-width: 860px) {
+  /* ── Page padding */
+  .dr-page {
+    padding: 1rem 0.9rem;
+  }
+
+  /* ── Switch to single-column stacked layout */
+  .dr-layout {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  /* ── Sidebar becomes a collapsible drawer */
+  .dr-settings {
+    position: static; /* no sticky on mobile */
+    border-radius: 12px;
+  }
+
+  /* ── The toggle button appears on mobile/tablet */
+  .dr-sidebar-toggle {
+    display: flex;
+  }
+
+  /* ── Collapsed state: hide the body */
+  .dr-settings.collapsed .dr-settings-body {
+    display: none;
+  }
+
+  .dr-settings.collapsed {
+    border-radius: 12px;
+  }
+
+  /* ── Body max-height relaxed on mobile (no sticky viewport constraint) */
+  .dr-settings-body {
+    max-height: 70vh;
+  }
+
+  /* ── Live bar becomes 2-column grid on tablet */
+  .dr-live-bar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    justify-items: center;
+    gap: 0.6rem 0.4rem;
+    padding: 0.7rem 0.8rem;
+  }
+
+  /* ── Progress ring spans full width row */
+  .dr-live-bar > svg {
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
+
+  /* ── Text display – reduce min-height */
+  .dr-text-disp {
+    min-height: 180px;
+  }
+
+  /* ── Typing area padding */
+  .dr-type-area {
+    padding: 1rem 0.9rem;
+  }
+
+  /* ── Results stat grid 2-col */
+  .dr-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* ── History table scrollable */
+  .dr-history {
+    overflow-x: auto;
+  }
+  .dr-hist-head,
+  .dr-hist-row {
+    min-width: 480px;
+  }
+}
+
+/* ── MOBILE: ≤ 540px ─────────────────────────────────────────────────────── */
+@media (max-width: 540px) {
+  .dr-page {
+    padding: 0.75rem 0.65rem;
+  }
+
+  /* ── Motiv banner wraps cleanly */
+  .dr-motiv {
+    font-size: 0.72rem;
+    padding: 0.5rem 0.7rem;
+    gap: 0.4rem;
+  }
+
+  /* ── Live bar 2 columns */
+  .dr-live-bar {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0.65rem 0.75rem;
+    gap: 0.5rem;
+  }
+
+  .dr-live-val {
+    font-size: 1.2rem;
+  }
+
+  /* ── Typing area */
+  .dr-type-area {
+    padding: 0.8rem 0.7rem;
+    border-radius: 10px;
+  }
+
+  /* ── Text display height */
+  .dr-text-disp {
+    min-height: 150px;
+  }
+
+  /* ── Smaller font size on very small screens */
+  .dr-text-line,
+  .dr-text-disp {
+    font-size: 0.78rem;
+    line-height: 1.7;
+  }
+
+  /* ── Input resize */
+  .dr-input {
+    font-size: 0.82rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  /* ── Actions full-width buttons */
+  .dr-actions {
+    gap: 0.4rem;
+  }
+  .dr-actions .tc-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.55rem 0.5rem;
+  }
+
+  /* ── Results */
+  .dr-res-title {
+    font-size: 0.9rem;
+  }
+  .dr-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .dr-stat-val {
+    font-size: 1rem;
+  }
+  .dr-results {
+    padding: 1rem;
+  }
+
+  /* ── Mode grid 3 cols */
+  .dr-mode-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.25rem;
+  }
+  .dr-mode-btn {
+    font-size: 0.6rem;
+    padding: 0.4rem 0.2rem;
+  }
+
+  /* ── Chips smaller */
+  .dr-chip-val {
+    font-size: 0.72rem;
+  }
+  .dr-char-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.7rem;
+  }
+
+  /* ── Picker tabs wrap */
+  .dr-picker-tabs {
+    gap: 0.25rem;
+  }
+  .dr-picker-tab {
+    font-size: 0.64rem;
+    padding: 0.18rem 0.45rem;
+  }
+
+  /* ── Duration row */
+  .dr-dur-btn {
+    padding: 0.22rem 0.45rem;
+    font-size: 0.68rem;
+  }
+
+  /* ── Settings head */
+  .dr-settings-title {
+    font-size: 0.78rem;
+  }
+
+  /* ── Buttons */
+  .tc-btn {
+    font-size: 0.76rem;
+    padding: 0.48rem 0.85rem;
+  }
+}
+
+/* ── VERY SMALL MOBILE: ≤ 380px ─────────────────────────────────────────── */
+@media (max-width: 380px) {
+  .dr-live-bar {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem;
+  }
+
+  .dr-mode-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dr-text-line,
+  .dr-text-disp {
+    font-size: 0.72rem;
+    line-height: 1.65;
+  }
+
+  .dr-text-disp {
+    min-height: 130px;
+  }
+}
+
+/* ── REDUCED MOTION ──────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .dr-ch-cur::before {
+    animation: none;
+    opacity: 1;
+  }
+  .tc-btn-acc:hover {
+    transform: none;
+  }
+  .dr-results {
+    animation: none;
+  }
+}
+
+.dr-text-disp {
+  font-family: "JetBrains Mono", monospace;
+  line-height: 2;
+  min-height: 220px;
+  width: 100%;
+  display: block;
+
+  /* 🔥 ADD THESE */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  overflow-x: hidden;
+}
+.dr-text-line {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.25rem;
+
+  /* 🔥 ADD THESE */
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.dr-text-line span {
+  display: inline;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

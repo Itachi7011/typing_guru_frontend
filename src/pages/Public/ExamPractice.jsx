@@ -39,6 +39,8 @@ import {
   Layers,
   Volume2,
   VolumeX,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   FB,
@@ -598,8 +600,6 @@ function buildText(contentType, language, examId) {
   const symbols = () => "@ # $ % & * ( ) - + = [ ] ; : , . / ? ! ".repeat(30);
 
   const pool = language === "hindi" ? hindi : eng;
-
-  // For custom mode, generate much longer text
   const isCustom = examId === "custom";
   const wordCount = isCustom ? 300 : 120;
 
@@ -619,19 +619,16 @@ function buildText(contentType, language, examId) {
   return selected;
 }
 
-// ── CALCULATE KEY DEPRESSIONS ────────────────────────────────────────────────
 function calcKeyDepressions(str) {
-  return str.length; // every character typed = 1 key depression
+  return str.length;
 }
 
-// ── STORAGE KEY ──────────────────────────────────────────────────────────────
 const EP_HIST_KEY = "ep_exam_history";
 
 const INFINITE_TEXT_GENERATOR_EXAM = {
   generateMoreText: function (contentType, language, examId) {
     return buildText(contentType, language, examId);
   },
-
   ensureBuffer: function (
     currentText,
     userInputLength,
@@ -640,32 +637,43 @@ const INFINITE_TEXT_GENERATOR_EXAM = {
     examId,
   ) {
     const remainingChars = currentText.length - userInputLength;
-    if (remainingChars < 300) { 
+    if (remainingChars < 300) {
       const newChunk = this.generateMoreText(contentType, language, examId);
-      return currentText + " " + newChunk; 
+      return currentText + " " + newChunk;
     }
-    return currentText;  
+    return currentText;
   },
-}; 
-
-const calculateStableWPM = (correctChars, seconds) => { 
-  // Ensure minimum time to avoid spikes
-  const safeSeconds = Math.max(seconds, 5);
-  const minutes = safeSeconds / 60;
-  const words = correctChars / 5;
-  return Math.round(words / minutes);
 };
+
+// ── HOOK: measure container width for dynamic line length ──────────────────
+function useContainerWidth(ref) {
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    if (!ref.current) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setWidth(entry.contentRect.width);
+    });
+    ro.observe(ref.current);
+    setWidth(ref.current.getBoundingClientRect().width);
+    return () => ro.disconnect();
+  }, [ref]);
+  return width;
+}
 
 // ── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function ExamPractice() {
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
 
+  // Mobile sidebar state
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // Exam selection
   const [selectedExam, setSelectedExam] = useState(EXAMS[0]);
   const [language, setLanguage] = useState("english");
   const [contentType, setContentType] = useState("sentences");
   const [showReco, setShowReco] = useState(false);
+  const isGeneratingRef = useRef(false);
 
   // Custom mode overrides
   const [customWPM, setCustomWPM] = useState(40);
@@ -685,9 +693,7 @@ export default function ExamPractice() {
   const [wpmHist, setWpmHist] = useState([]);
   const [results, setResults] = useState(null);
   const [history, setHistory] = useState(() => lsGet(EP_HIST_KEY) || []);
-
   const [rollingWPM, setRollingWPM] = useState(0);
-  const rollingWPMBufferRef = useRef([]);
 
   const inputRef = useRef(null);
   const timerRef = useRef(null);
@@ -698,6 +704,14 @@ export default function ExamPractice() {
   const startRef = useRef(null);
   const wpmHistRef = useRef([]);
   const endCalledRef = useRef(false);
+  const rollingWPMBufferRef = useRef([]);
+
+  // Container ref for dynamic line length
+  const textDisplayRef = useRef(null);
+  const containerWidth = useContainerWidth(textDisplayRef);
+
+  const BUFFER_THRESHOLD = 2000;
+  const MIN_AHEAD_BUFFER = 1500;
 
   useEffect(() => {
     userInputRef.current = userInput;
@@ -712,7 +726,24 @@ export default function ExamPractice() {
     wpmHistRef.current = wpmHist;
   }, [wpmHist]);
 
-  // Resolve active exam config
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        sidebarOpen &&
+        !e.target.closest(".tg-exam-pract-sidebar") &&
+        !e.target.closest(".tg-exam-pract-sidebar-toggle")
+      ) {
+        setSidebarOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [sidebarOpen]);
+
+  // Close sidebar on route/exam change on mobile
+  const closeSidebar = () => setSidebarOpen(false);
+
   const examConfig = useMemo(() => {
     if (selectedExam.isCustom) {
       return {
@@ -737,7 +768,6 @@ export default function ExamPractice() {
     contentType,
   ]);
 
-  // Generate text
   const generateText = useCallback(() => {
     const ct = selectedExam.isCustom ? customContent : contentType;
     const lang =
@@ -761,7 +791,6 @@ export default function ExamPractice() {
     generateText();
   }, [generateText]);
 
-  // Timer
   useEffect(() => {
     if (running && !done) {
       timerRef.current = setInterval(() => {
@@ -778,7 +807,6 @@ export default function ExamPractice() {
       wpmTickRef.current = setInterval(() => {
         if (startRef.current && running && !done) {
           const elapsed = (Date.now() - startRef.current) / 1000;
-          // Only record WPM after 10 seconds for more stable readings
           if (elapsed >= 10) {
             const correct = countCorrect(
               userInputRef.current,
@@ -798,31 +826,34 @@ export default function ExamPractice() {
   }, [running, done]);
 
   useEffect(() => {
-    if (running && !done && startTime && userInput.length > 50) {
-      const elapsed = (Date.now() - startTime) / 1000;
-      if (elapsed >= 5) {
-        const correct = countCorrect(userInput, testText);
-        const wpm = correct / 5 / (elapsed / 60);
-        const cappedWpm = Math.min(Math.max(wpm, 0), 200);
-
-        // Maintain rolling buffer of last 3 readings
-        rollingWPMBufferRef.current = [
-          ...rollingWPMBufferRef.current,
-          Math.round(cappedWpm),
-        ].slice(-3);
-
-        // Calculate average of rolling buffer
-        if (rollingWPMBufferRef.current.length >= 2) {
-          const avgWpm =
-            rollingWPMBufferRef.current.reduce((a, b) => a + b, 0) /
-            rollingWPMBufferRef.current.length;
-          setRollingWPM(Math.round(avgWpm));
-        } else {
-          setRollingWPM(Math.round(cappedWpm));
-        }
-      }
+    if (!running || done) return;
+    if (isGeneratingRef.current) return;
+    const remaining = testText.length - userInput.length;
+    if (remaining < MIN_AHEAD_BUFFER) {
+      isGeneratingRef.current = true;
+      requestIdleCallback(() => {
+        const chunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
+          selectedExam.isCustom ? customContent : contentType,
+          language,
+          selectedExam.id,
+        );
+        setTestText((prev) => prev + " " + chunk);
+        isGeneratingRef.current = false;
+      });
     }
-  }, [userInput, running, done, startTime, testText]);
+  }, [userInput, running, done]);
+
+  useEffect(() => {
+    if (!selectedExam.isCustom) return;
+    if (testText.length < 5000) {
+      const chunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
+        customContent,
+        language,
+        selectedExam.id,
+      );
+      setTestText((prev) => prev + " " + chunk);
+    }
+  }, [testText]);
 
   function playClick() {
     if (!soundOn) return;
@@ -854,138 +885,89 @@ export default function ExamPractice() {
     userInputRef.current = val;
     playClick();
 
-    // ONLY add infinite text for Custom mode
-    if (selectedExam.isCustom) {
-      const remainingChars = testText.length - val.length;
-      if (remainingChars < 300 && !done) {
-        const newChunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
-          selectedExam.isCustom ? customContent : contentType,
-          language,
-          selectedExam.id,
-        );
-        setTestText((prev) => prev + " " + newChunk);
-      }
-
-      if (val.length >= testText.length && !done && !endCalledRef.current) {
-        const newChunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
-          selectedExam.isCustom ? customContent : contentType,
-          language,
-          selectedExam.id,
-        );
-        setTestText((prev) => prev + " " + newChunk);
+    if (selectedExam.isCustom && !done) {
+      const remaining = testTextRef.current.length - val.length;
+      if (remaining < BUFFER_THRESHOLD) {
+        setTestText((prev) => {
+          const remaining = prev.length - val.length;
+          if (selectedExam.isCustom && remaining < BUFFER_THRESHOLD) {
+            const newChunk = INFINITE_TEXT_GENERATOR_EXAM.generateMoreText(
+              customContent,
+              language,
+              selectedExam.id,
+            );
+            return prev + " " + newChunk;
+          }
+          return prev;
+        });
       }
     }
+  }
 
-    if (
-      val.length >= testText.length &&
-      !endCalledRef.current &&
-      !selectedExam.isCustom
-    ) {
-      endTest();
+  function endTest() {
+    if (endCalledRef.current) return;
+    endCalledRef.current = true;
+    clearInterval(timerRef.current);
+    clearInterval(wpmTickRef.current);
+
+    const fi = userInputRef.current,
+      ft = testTextRef.current,
+      fs = startRef.current;
+    const fh = [...wpmHistRef.current];
+    let elapsed = examConfig.durationSec;
+
+    let wpm = 0;
+    if (elapsed >= 3 && fi.length > 0) {
+      const correct = countCorrect(fi, ft);
+      wpm = correct / 5 / (elapsed / 60);
+      wpm = Math.max(0, Math.min(wpm, 200));
+    } else if (fh.length > 0) {
+      wpm = fh.reduce((a, b) => a + b, 0) / fh.length;
+    } else if (fi.length > 0) {
+      const correct = countCorrect(fi, ft);
+      wpm = correct / 5 / (Math.max(elapsed, 3) / 60);
     }
-  }
 
-  const additionalCSS = `
-  .tg-exam-pract-text-line {
-    display: block;
-    width: 100%;
-    margin-bottom: 0.25rem;
-    font-family: var(--ep-mono, "JetBrains Mono", monospace);
-    font-size: 1.05rem;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    word-break: normal;
-    letter-spacing: normal;
-  }
-  .tg-exam-pract-text-line span {
-    display: inline;
-    white-space: pre;
-    letter-spacing: normal;
-  }
-  .tg-exam-pract-empty-line {
-    height: 1.8rem;
-    opacity: 0.3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    border-top: 1px dashed var(--ep-border);
-    margin: 0.25rem 0;
-  }
-  .tg-exam-pract-placeholder-dots {
-    color: var(--ep-text3);
-    font-size: 0.8rem;
-    opacity: 0.5;
-    font-family: "JetBrains Mono", monospace;
-  }
-  .tg-exam-pract-text-display {
-    min-height: 250px;
-    display: block;
-  }
-`;
-
-function endTest() {
-  if (endCalledRef.current) return;
-  endCalledRef.current = true;
-  clearInterval(timerRef.current);
-  clearInterval(wpmTickRef.current);
-
-  const fi = userInputRef.current,
-    ft = testTextRef.current,
-    fs = startRef.current;
-  const fh = [...wpmHistRef.current];
-  const elapsed = fs ? (Date.now() - fs) / 1000 : examConfig.durationSec;
-  
-  // Calculate final WPM using total elapsed time
-  let wpm = 0;
-  if (elapsed >= 3 && fi.length > 0) {
     const correct = countCorrect(fi, ft);
-    // Use total elapsed time for final calculation
-    wpm = (correct / 5) / (elapsed / 60);
-    wpm = Math.max(0, Math.min(wpm, 200));
-  } else if (fh.length > 0) {
-    // If test was very short, use the rolling average
-    wpm = fh.reduce((a, b) => a + b, 0) / fh.length;
-  } else if (fi.length > 0) {
-    // Last resort fallback
-    const correct = countCorrect(fi, ft);
-    wpm = (correct / 5) / (Math.max(elapsed, 3) / 60);
+    const acc = calcAccuracy(correct, fi.length || 1);
+    const cons =
+      fh.length > 1
+        ? Math.round(
+            100 -
+              ((Math.max(...fh) - Math.min(...fh)) / (Math.max(...fh) || 1)) *
+                100,
+          )
+        : 100;
+    const kd = calcKeyDepressions(fi);
+    const passed = examConfig.keyDepression
+      ? kd >= examConfig.keyDepressionRequired &&
+        acc >= examConfig.accuracyRequired
+      : wpm >= examConfig.wpmRequired && acc >= examConfig.accuracyRequired;
+
+    const res = {
+      wpm: Math.round(Math.max(0, Math.min(wpm, 200))),
+      accuracy: Math.max(0, Math.min(100, Math.round(acc))),
+      consistency: Math.max(0, Math.min(100, Math.round(cons))),
+      mistakes: fi.length - correct,
+      elapsed: Math.round(elapsed),
+      kd,
+      passed,
+      examId: selectedExam.id,
+      examName: selectedExam.name,
+      language,
+      date: new Date().toISOString(),
+    };
+
+    setDone(true);
+    setRunning(false);
+    setResults(res);
+    setStartTime(null);
+
+    const hist = [res, ...(lsGet(EP_HIST_KEY) || [])].slice(0, 50);
+    lsSet(EP_HIST_KEY, hist);
+    setHistory(hist);
+    setShowReco(true);
   }
-
-  const correct = countCorrect(fi, ft);
-  const acc = calcAccuracy(correct, fi.length || 1);
-  const cons = fh.length > 1
-    ? Math.round(100 - ((Math.max(...fh) - Math.min(...fh)) / (Math.max(...fh) || 1)) * 100)
-    : 100;
-  const kd = calcKeyDepressions(fi);
-  const passed = examConfig.keyDepression
-    ? kd >= examConfig.keyDepressionRequired && acc >= examConfig.accuracyRequired
-    : wpm >= examConfig.wpmRequired && acc >= examConfig.accuracyRequired;
-
-  const res = {
-    wpm: Math.round(Math.max(0, Math.min(wpm, 200))),
-    accuracy: Math.max(0, Math.min(100, Math.round(acc))),
-    consistency: Math.max(0, Math.min(100, Math.round(cons))),
-    mistakes: fi.length - correct,
-    elapsed: Math.round(elapsed),
-    kd,
-    passed,
-    examId: selectedExam.id,
-    examName: selectedExam.name,
-    language,
-    date: new Date().toISOString(),
-  };
-
-  setDone(true);
-  setRunning(false);
-  setResults(res);
-  setStartTime(null);
-
-  const hist = [res, ...(lsGet(EP_HIST_KEY) || [])].slice(0, 50);
-  lsSet(EP_HIST_KEY, hist);
-  setHistory(hist);
-  setShowReco(true);
-}
 
   function resetTest() {
     clearInterval(timerRef.current);
@@ -1004,28 +986,20 @@ function endTest() {
         validTypes.includes("sentences") ? "sentences" : validTypes[0],
       );
     }
+    // Close sidebar on mobile after selecting
+    closeSidebar();
   }
 
-  // Live WPM
   const liveWPM = useMemo(() => {
     if (done && results) return results.wpm;
     if (running && startTime && userInput.length > 20) {
-      // Only calculate after enough characters
       const elapsed = (Date.now() - startTime) / 1000;
-
-      // Minimum time threshold - don't show WPM for first 5 seconds
       if (elapsed < 5) return 0;
-
       const correct = countCorrect(userInput, testText);
-      // Use a longer time window for more stable calculation
       const effectiveTime = Math.max(elapsed, 5);
       const wpm = correct / 5 / (effectiveTime / 60);
-
-      // Cap at reasonable values
       let cappedWpm = Math.min(wpm, 200);
       cappedWpm = Math.max(cappedWpm, 0);
-
-      // Round to nearest integer
       return Math.round(cappedWpm);
     }
     return rollingWPM || 0;
@@ -1049,38 +1023,46 @@ function endTest() {
   const timerPct = (timeLeft / dur) * 100;
   const timerColor =
     timerPct > 50 ? "#10b981" : timerPct > 20 ? "#f59e0b" : "#ef4444";
-  const ringR = 27, 
-    ringCirc = 2 * Math.PI * ringR; 
- 
-  const onTrack = useMemo(() => { 
-    if (!running && !done) return null; 
-    if (examConfig.keyDepression)  
-      return ( 
-        liveKD >=
-          (examConfig.keyDepressionRequired || 2000) * (1 - timeLeft / dur) &&  
-        liveAcc >= examConfig.accuracyRequired  
-      );  
-    return (
-      liveWPM >= examConfig.wpmRequired && 
-      liveAcc >= examConfig.accuracyRequired 
-    ); 
-  }, [running, done, liveWPM, liveAcc, liveKD, examConfig, timeLeft, dur]); 
+  const ringR = 27,
+    ringCirc = 2 * Math.PI * ringR;
 
-  // Rendered text
+  const onTrack = useMemo(() => {
+    if (!running && !done) return null;
+    if (examConfig.keyDepression)
+      return (
+        liveKD >=
+          (examConfig.keyDepressionRequired || 2000) * (1 - timeLeft / dur) &&
+        liveAcc >= examConfig.accuracyRequired
+      );
+    return (
+      liveWPM >= examConfig.wpmRequired &&
+      liveAcc >= examConfig.accuracyRequired
+    );
+  }, [running, done, liveWPM, liveAcc, liveKD, examConfig, timeLeft, dur]);
+
+  // Dynamic line length based on container width
+  const charsPerLine = useMemo(() => {
+    if (!containerWidth) return 75;
+    // Approximate: at 1rem (16px) monospace, each char ≈ 9.6px
+    // We use font-size of 1.05rem = ~16.8px per char
+    const charWidth = 9.8;
+    const padding = 40; // 1.3rem * 2 sides ≈ 40px
+    const availableWidth = containerWidth - padding;
+    const chars = Math.floor(availableWidth / charWidth);
+    return Math.max(20, Math.min(chars, 80));
+  }, [containerWidth]);
+
+  // Rendered text — uses dynamic charsPerLine
   const renderedText = useMemo(() => {
     if (!testText) return null;
-
     const text = testText;
 
-    // Function to split text into lines at word boundaries
-    const splitIntoLines = (str, maxLineLength = 75) => {
+    const splitIntoLines = (str, maxLineLength) => {
       const lines = [];
       let currentLine = "";
       const words = str.split(/(\s+)/);
-
       for (let i = 0; i < words.length; i++) {
         const word = words[i];
-
         if (word.match(/^\s+$/)) {
           if ((currentLine + word).length <= maxLineLength) {
             currentLine += word;
@@ -1098,16 +1080,14 @@ function endTest() {
           }
         }
       }
-
       if (currentLine) lines.push(currentLine.trimEnd());
       if (lines.length === 0) lines.push("");
       return lines.map((line) => line.split(""));
     };
 
-    const lines = splitIntoLines(text, 75);
+    const lines = splitIntoLines(text, charsPerLine);
     if (lines.length === 0) return null;
 
-    // Find current line
     let charCount = 0;
     let currentLineIndex = 0;
     for (let i = 0; i < lines.length; i++) {
@@ -1120,10 +1100,8 @@ function endTest() {
       charCount += lines[i].length;
     }
 
-    // Show exactly 5 lines with current line in middle
     let startLineIndex = 0;
     let endLineIndex;
-
     if (currentLineIndex >= 3) {
       startLineIndex = Math.max(0, currentLineIndex - 2);
       endLineIndex = Math.min(lines.length, startLineIndex + 5);
@@ -1138,13 +1116,11 @@ function endTest() {
     const emptyLinesNeeded = Math.max(0, 5 - visibleLines.length);
     for (let i = 0; i < emptyLinesNeeded; i++) visibleLines.push([]);
 
-    // Calculate offset
     let offset = 0;
     for (let i = 0; i < startLineIndex; i++) {
-      offset += lines[i]?.length || 0;
+      offset += (lines[i]?.length || 0) + 1;
     }
 
-    // Render
     const renderedChars = [];
     let globalIndex = offset;
 
@@ -1184,12 +1160,12 @@ function endTest() {
             {lineChars}
           </div>,
         );
-        globalIndex += line.length;
+        globalIndex += line.length + 1;
       }
     });
 
     return renderedChars;
-  }, [testText, userInput]);
+  }, [testText, userInput, charsPerLine]);
 
   const badgeClass = {
     wpm: "tg-exam-pract-badge-wpm",
@@ -1205,205 +1181,240 @@ function endTest() {
         (selectedExam.contentTypes || []).includes(ct.id),
       );
 
+  const SidebarContent = () => (
+    <>
+      {/* Exam Selector */}
+      <div className="tg-exam-pract-panel">
+        <div className="tg-exam-pract-panel-head">
+          <FileText size={13} /> Select Exam
+        </div>
+        <div
+          className="tg-exam-pract-panel-body"
+          style={{ paddingTop: "0.6rem", paddingBottom: "0.75rem" }}
+        >
+          <div className="tg-exam-pract-exam-list">
+            {EXAMS.map((exam) => (
+              <button
+                key={exam.id}
+                className={`tg-exam-pract-exam-btn ${selectedExam.id === exam.id ? (exam.isCustom ? "tg-exam-pract-custom-active" : "tg-exam-pract-exam-active") : ""}`}
+                onClick={() => selectExam(exam)}
+              >
+                <div className="tg-exam-pract-exam-icon">
+                  {exam.shortName.slice(0, 2)}
+                </div>
+                <div className="tg-exam-pract-exam-info">
+                  <div className="tg-exam-pract-exam-name">{exam.name}</div>
+                  <div className="tg-exam-pract-exam-type">{exam.type}</div>
+                </div>
+                <span
+                  className={`tg-exam-pract-exam-badge ${badgeClass[exam.typeBadge] || ""}`}
+                >
+                  {exam.typeBadge === "wpm"
+                    ? "WPM"
+                    : exam.typeBadge === "kd"
+                      ? "KD"
+                      : exam.typeBadge === "dict"
+                        ? "DICT"
+                        : exam.typeBadge === "cert"
+                          ? "CERT"
+                          : "✦"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Exam Info */}
+      {!selectedExam.isCustom && Object.keys(selectedExam.info).length > 0 && (
+        <div className="tg-exam-pract-info-box">
+          <div className="tg-exam-pract-info-title">
+            <Info size={13} /> Exam Details
+          </div>
+          {Object.entries(selectedExam.info).map(([k, v]) => (
+            <div key={k} className="tg-exam-pract-info-row">
+              <span className="tg-exam-pract-info-key">{k}</span>
+              <span className="tg-exam-pract-info-val">{v}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Language */}
+      {(selectedExam.allowHindi || selectedExam.isCustom) && (
+        <div className="tg-exam-pract-panel">
+          <div className="tg-exam-pract-panel-head">
+            <Keyboard size={13} /> Language
+          </div>
+          <div
+            className="tg-exam-pract-panel-body"
+            style={{ padding: "0.75rem 1rem" }}
+          >
+            <div className="tg-exam-pract-lang-row">
+              {["english", "hindi"].map((lang) => (
+                <button
+                  key={lang}
+                  className={`tg-exam-pract-lang-btn ${language === lang ? "tg-exam-pract-lang-active" : ""}`}
+                  onClick={() => setLanguage(lang)}
+                >
+                  {lang === "english" ? "🇬🇧 English" : "🇮🇳 हिन्दी"}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Content Type */}
+      <div className="tg-exam-pract-panel">
+        <div className="tg-exam-pract-panel-head">
+          <Layers size={13} /> Content Type
+        </div>
+        <div
+          className="tg-exam-pract-panel-body"
+          style={{ padding: "0.75rem 1rem" }}
+        >
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+            {availableContentTypes.map((ct) => (
+              <button
+                key={ct.id}
+                className={`tg-exam-pract-lang-btn ${(selectedExam.isCustom ? customContent : contentType) === ct.id ? "tg-exam-pract-lang-active" : ""}`}
+                style={{
+                  flex: "0 0 auto",
+                  fontSize: "0.7rem",
+                  padding: "0.3rem 0.6rem",
+                }}
+                onClick={() =>
+                  selectedExam.isCustom
+                    ? setCustomContent(ct.id)
+                    : setContentType(ct.id)
+                }
+              >
+                {ct.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Custom Mode Config */}
+      {selectedExam.isCustom && (
+        <div className="tg-exam-pract-panel">
+          <div className="tg-exam-pract-panel-head">
+            <Settings size={13} /> Custom Settings
+          </div>
+          <div className="tg-exam-pract-panel-body">
+            <div className="tg-exam-pract-custom-grid">
+              <div className="tg-exam-pract-custom-field">
+                <label className="tg-exam-pract-field-label">Target WPM</label>
+                <input
+                  type="number"
+                  min={10}
+                  max={200}
+                  value={customWPM}
+                  onChange={(e) => setCustomWPM(Number(e.target.value))}
+                  className="tg-exam-pract-field-input"
+                />
+              </div>
+              <div className="tg-exam-pract-custom-field">
+                <label className="tg-exam-pract-field-label">
+                  Min Accuracy %
+                </label>
+                <input
+                  type="number"
+                  min={50}
+                  max={100}
+                  value={customAcc}
+                  onChange={(e) => setCustomAcc(Number(e.target.value))}
+                  className="tg-exam-pract-field-input"
+                />
+              </div>
+              <div className="tg-exam-pract-custom-field">
+                <label className="tg-exam-pract-field-label">
+                  Duration (sec)
+                </label>
+                <select
+                  value={customDur}
+                  onChange={(e) => setCustomDur(Number(e.target.value))}
+                  className="tg-exam-pract-field-select"
+                >
+                  {[30, 60, 120, 180, 300, 600, 900].map((d) => (
+                    <option key={d} value={d}>
+                      {d < 60 ? `${d}s` : `${d / 60}m`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="tg-exam-pract-custom-field">
+                <label className="tg-exam-pract-field-label">Mode</label>
+                <select
+                  value={customContent}
+                  onChange={(e) => setCustomContent(e.target.value)}
+                  className="tg-exam-pract-field-select"
+                >
+                  {CONTENT_TYPES.map((ct) => (
+                    <option key={ct.id} value={ct.id}>
+                      {ct.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="tg-exam-pract-toggle-row">
+              <span>Key Depression Mode</span>
+              <div
+                className={`tg-exam-pract-toggle ${customKD ? "tg-exam-pract-toggle-on" : ""}`}
+                onClick={() => setCustomKD((k) => !k)}
+                role="switch"
+              />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div
       className={`tg-exam-pract-root ${isDarkMode ? "dark" : "light"} lang-${language}`}
     >
+      {/* Mobile sidebar backdrop */}
+      {sidebarOpen && (
+        <div
+          className="tg-exam-pract-backdrop"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* BODY */}
       <div className="tg-exam-pract-body">
+        {/* Mobile sidebar toggle button (floating) */}
+        <button
+          className="tg-exam-pract-sidebar-toggle"
+          onClick={() => setSidebarOpen((o) => !o)}
+          aria-label="Toggle sidebar"
+        >
+          {sidebarOpen ? <X size={18} /> : <Menu size={18} />}
+          <span>{sidebarOpen ? "Close" : selectedExam.shortName}</span>
+        </button>
+
         {/* SIDEBAR */}
-        <aside className="tg-exam-pract-sidebar">
-          {/* Exam Selector */}
-          <div className="tg-exam-pract-panel">
-            <div className="tg-exam-pract-panel-head">
-              <FileText size={13} /> Select Exam
-            </div>
-            <div
-              className="tg-exam-pract-panel-body"
-              style={{ paddingTop: "0.6rem", paddingBottom: "0.75rem" }}
+        <aside
+          className={`tg-exam-pract-sidebar ${sidebarOpen ? "tg-exam-pract-sidebar-open" : ""}`}
+        >
+          {/* Sidebar header on mobile */}
+          <div className="tg-exam-pract-sidebar-mobile-header">
+            <span className="tg-exam-pract-sidebar-mobile-title">
+              <FileText size={14} /> Choose Exam
+            </span>
+            <button
+              className="tg-exam-pract-sidebar-close-btn"
+              onClick={() => setSidebarOpen(false)}
             >
-              <div className="tg-exam-pract-exam-list">
-                {EXAMS.map((exam) => (
-                  <button
-                    key={exam.id}
-                    className={`tg-exam-pract-exam-btn ${selectedExam.id === exam.id ? (exam.isCustom ? "tg-exam-pract-custom-active" : "tg-exam-pract-exam-active") : ""}`}
-                    onClick={() => selectExam(exam)}
-                  >
-                    <div className="tg-exam-pract-exam-icon">
-                      {exam.shortName.slice(0, 2)}
-                    </div>
-                    <div className="tg-exam-pract-exam-info">
-                      <div className="tg-exam-pract-exam-name">{exam.name}</div>
-                      <div className="tg-exam-pract-exam-type">{exam.type}</div>
-                    </div>
-                    <span
-                      className={`tg-exam-pract-exam-badge ${badgeClass[exam.typeBadge] || ""}`}
-                    >
-                      {exam.typeBadge === "wpm"
-                        ? "WPM"
-                        : exam.typeBadge === "kd"
-                          ? "KD"
-                          : exam.typeBadge === "dict"
-                            ? "DICT"
-                            : exam.typeBadge === "cert"
-                              ? "CERT"
-                              : "✦"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
+              <X size={16} />
+            </button>
           </div>
-
-          {/* Exam Info */}
-          {!selectedExam.isCustom &&
-            Object.keys(selectedExam.info).length > 0 && (
-              <div className="tg-exam-pract-info-box">
-                <div className="tg-exam-pract-info-title">
-                  <Info size={13} /> Exam Details
-                </div>
-                {Object.entries(selectedExam.info).map(([k, v]) => (
-                  <div key={k} className="tg-exam-pract-info-row">
-                    <span className="tg-exam-pract-info-key">{k}</span>
-                    <span className="tg-exam-pract-info-val">{v}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-          {/* Language (only if exam allows Hindi) */}
-          {(selectedExam.allowHindi || selectedExam.isCustom) && (
-            <div className="tg-exam-pract-panel">
-              <div className="tg-exam-pract-panel-head">
-                <Keyboard size={13} /> Language
-              </div>
-              <div
-                className="tg-exam-pract-panel-body"
-                style={{ padding: "0.75rem 1rem" }}
-              >
-                <div className="tg-exam-pract-lang-row">
-                  {["english", "hindi"].map((lang) => (
-                    <button
-                      key={lang}
-                      className={`tg-exam-pract-lang-btn ${language === lang ? "tg-exam-pract-lang-active" : ""}`}
-                      onClick={() => setLanguage(lang)}
-                    >
-                      {lang === "english" ? "🇬🇧 English" : "🇮🇳 हिन्दी"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Content Type */}
-          <div className="tg-exam-pract-panel">
-            <div className="tg-exam-pract-panel-head">
-              <Layers size={13} /> Content Type
-            </div>
-            <div
-              className="tg-exam-pract-panel-body"
-              style={{ padding: "0.75rem 1rem" }}
-            >
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
-                {availableContentTypes.map((ct) => (
-                  <button
-                    key={ct.id}
-                    className={`tg-exam-pract-lang-btn ${(selectedExam.isCustom ? customContent : contentType) === ct.id ? "tg-exam-pract-lang-active" : ""}`}
-                    style={{
-                      flex: "0 0 auto",
-                      fontSize: "0.7rem",
-                      padding: "0.3rem 0.6rem",
-                    }}
-                    onClick={() =>
-                      selectedExam.isCustom
-                        ? setCustomContent(ct.id)
-                        : setContentType(ct.id)
-                    }
-                  >
-                    {ct.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Custom Mode Config */}
-          {selectedExam.isCustom && (
-            <div className="tg-exam-pract-panel">
-              <div className="tg-exam-pract-panel-head">
-                <Settings size={13} /> Custom Settings
-              </div>
-              <div className="tg-exam-pract-panel-body">
-                <div className="tg-exam-pract-custom-grid">
-                  <div className="tg-exam-pract-custom-field">
-                    <label className="tg-exam-pract-field-label">
-                      Target WPM
-                    </label>
-                    <input
-                      type="number"
-                      min={10}
-                      max={200}
-                      value={customWPM}
-                      onChange={(e) => setCustomWPM(Number(e.target.value))}
-                      className="tg-exam-pract-field-input"
-                    />
-                  </div>
-                  <div className="tg-exam-pract-custom-field">
-                    <label className="tg-exam-pract-field-label">
-                      Min Accuracy %
-                    </label>
-                    <input
-                      type="number"
-                      min={50}
-                      max={100}
-                      value={customAcc}
-                      onChange={(e) => setCustomAcc(Number(e.target.value))}
-                      className="tg-exam-pract-field-input"
-                    />
-                  </div>
-                  <div className="tg-exam-pract-custom-field">
-                    <label className="tg-exam-pract-field-label">
-                      Duration (sec)
-                    </label>
-                    <select
-                      value={customDur}
-                      onChange={(e) => setCustomDur(Number(e.target.value))}
-                      className="tg-exam-pract-field-select"
-                    >
-                      {[30, 60, 120, 180, 300, 600, 900].map((d) => (
-                        <option key={d} value={d}>
-                          {d < 60 ? `${d}s` : `${d / 60}m`}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="tg-exam-pract-custom-field">
-                    <label className="tg-exam-pract-field-label">Mode</label>
-                    <select
-                      value={customContent}
-                      onChange={(e) => setCustomContent(e.target.value)}
-                      className="tg-exam-pract-field-select"
-                    >
-                      {CONTENT_TYPES.map((ct) => (
-                        <option key={ct.id} value={ct.id}>
-                          {ct.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-                <div className="tg-exam-pract-toggle-row">
-                  <span>Key Depression Mode</span>
-                  <div
-                    className={`tg-exam-pract-toggle ${customKD ? "tg-exam-pract-toggle-on" : ""}`}
-                    onClick={() => setCustomKD((k) => !k)}
-                    role="switch"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          <SidebarContent />
         </aside>
 
         {/* MAIN */}
@@ -1416,17 +1427,17 @@ function endTest() {
               <span className="tg-exam-pract-live-lbl">WPM</span>
               {!selectedExam.isCustom && (
                 <span className="tg-exam-pract-live-target">
-                  Target: {examConfig.wpmRequired}
+                  /{examConfig.wpmRequired}
                 </span>
               )}
             </div>
             <div className="tg-exam-pract-live-stat">
               <Target size={14} style={{ color: "var(--ep-green)" }} />
               <span className="tg-exam-pract-live-val">{liveAcc}%</span>
-              <span className="tg-exam-pract-live-lbl">Accuracy</span>
+              <span className="tg-exam-pract-live-lbl">Acc</span>
               {!selectedExam.isCustom && (
                 <span className="tg-exam-pract-live-target">
-                  Min: {examConfig.accuracyRequired}%
+                  Min {examConfig.accuracyRequired}%
                 </span>
               )}
             </div>
@@ -1476,9 +1487,9 @@ function endTest() {
               <div className="tg-exam-pract-live-stat">
                 <Hash size={14} style={{ color: "var(--ep-yellow)" }} />
                 <span className="tg-exam-pract-live-val">{liveKD}</span>
-                <span className="tg-exam-pract-live-lbl">Key Dep.</span>
+                <span className="tg-exam-pract-live-lbl">KD</span>
                 <span className="tg-exam-pract-live-target">
-                  Need: {examConfig.keyDepressionRequired || 2000}
+                  /{examConfig.keyDepressionRequired || 2000}
                 </span>
               </div>
             ) : null}
@@ -1535,7 +1546,7 @@ function endTest() {
             </div>
           )}
 
-          {/* KD bar for key depression exams */}
+          {/* KD bar */}
           {(selectedExam.keyDepression ||
             (selectedExam.isCustom && customKD)) &&
             running && (
@@ -1559,7 +1570,9 @@ function endTest() {
 
           {/* Typing Area */}
           <div className="tg-exam-pract-type-wrap">
-            <div className="tg-exam-pract-text-display">{renderedText}</div>
+            <div className="tg-exam-pract-text-display" ref={textDisplayRef}>
+              {renderedText}
+            </div>
             <textarea
               ref={inputRef}
               className="tg-exam-pract-textarea"
@@ -1703,7 +1716,7 @@ function endTest() {
                 ))}
               </div>
 
-              {/* Pass/fail verdict detail */}
+              {/* Verdict */}
               <div
                 className={`tg-exam-pract-verdict ${results.passed ? "tg-exam-pract-verdict-pass" : "tg-exam-pract-verdict-fail"}`}
               >
@@ -1720,28 +1733,26 @@ function endTest() {
                 </div>
                 <div className="tg-exam-pract-verdict-items">
                   {examConfig.keyDepression ? (
-                    <>
-                      <div className="tg-exam-pract-verdict-row">
-                        <span className="tg-exam-pract-verdict-key">
-                          <Hash size={11} /> Key Depressions ≥{" "}
-                          {examConfig.keyDepressionRequired || 2000}
-                        </span>
-                        <span
-                          className={
-                            results.kd >=
-                            (examConfig.keyDepressionRequired || 2000)
-                              ? "tg-exam-pract-verdict-met"
-                              : "tg-exam-pract-verdict-notmet"
-                          }
-                        >
-                          {results.kd}{" "}
-                          {results.kd >=
+                    <div className="tg-exam-pract-verdict-row">
+                      <span className="tg-exam-pract-verdict-key">
+                        <Hash size={11} /> Key Depressions ≥{" "}
+                        {examConfig.keyDepressionRequired || 2000}
+                      </span>
+                      <span
+                        className={
+                          results.kd >=
                           (examConfig.keyDepressionRequired || 2000)
-                            ? "✓"
-                            : "✗"}
-                        </span>
-                      </div>
-                    </>
+                            ? "tg-exam-pract-verdict-met"
+                            : "tg-exam-pract-verdict-notmet"
+                        }
+                      >
+                        {results.kd}{" "}
+                        {results.kd >=
+                        (examConfig.keyDepressionRequired || 2000)
+                          ? "✓"
+                          : "✗"}
+                      </span>
+                    </div>
                   ) : (
                     <div className="tg-exam-pract-verdict-row">
                       <span className="tg-exam-pract-verdict-key">
@@ -1815,7 +1826,7 @@ function endTest() {
             </div>
           )}
 
-          {/* Tips visible before test if user toggled */}
+          {/* Tips before test */}
           {!done && showReco && (
             <div
               className="tg-exam-pract-results"
@@ -1863,9 +1874,9 @@ function endTest() {
                   <span>Exam</span>
                   <span>WPM</span>
                   <span>Acc</span>
-                  <span>KD</span>
+                  <span className="tg-ep-hide-xs">KD</span>
                   <span>Result</span>
-                  <span>Date</span>
+                  <span className="tg-ep-hide-xs">Date</span>
                 </div>
                 {history.slice(0, 10).map((h, i) => (
                   <div key={i} className="tg-exam-pract-hist-row">
@@ -1874,7 +1885,7 @@ function endTest() {
                     </span>
                     <span className="tg-exam-pract-hist-wpm">{h.wpm}</span>
                     <span>{h.accuracy}%</span>
-                    <span>{h.kd || "—"}</span>
+                    <span className="tg-ep-hide-xs">{h.kd || "—"}</span>
                     <span
                       className={
                         h.passed
@@ -1884,7 +1895,9 @@ function endTest() {
                     >
                       {h.passed ? "✓ Pass" : "✗ Fail"}
                     </span>
-                    <span>{new Date(h.date).toLocaleDateString()}</span>
+                    <span className="tg-ep-hide-xs">
+                      {new Date(h.date).toLocaleDateString()}
+                    </span>
                   </div>
                 ))}
               </div>

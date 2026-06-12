@@ -182,7 +182,7 @@ export default function Navbar() {
           </button>
 
           {/* Auth dropdown */}
-          <div className="sk-nav-item">
+          {/* <div className="sk-nav-item">
             <button
               className={`sk-auth-btn ${openDropdown === "auth" ? "sk-drop-open" : ""}`}
               onClick={() => toggleDrop("auth")}
@@ -223,7 +223,7 @@ export default function Navbar() {
                 ))}
               </div>
             )}
-          </div>
+          </div> */}
 
           {/* Mobile toggle */}
           <button

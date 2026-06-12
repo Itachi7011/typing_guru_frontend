@@ -354,3 +354,52 @@
     right: 3.5rem;
   }
 }
+.skg-footer,
+.sk-footer-body,
+.sk-footer-bottom {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.sk-footer-body > div {
+  min-width: 0;
+}
+
+.sk-footer-desc {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  max-width: 100%;
+}
+
+.sk-footer-stats {
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.sk-footer-nl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.sk-footer-nl-input {
+  width: 100%;
+  min-width: 0;
+}
+
+.sk-footer-nl-btn {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .sk-footer-body {
+    overflow-x: hidden;
+  }
+
+  .sk-footer-col,
+  .skg-footer-brand {
+    max-width: 100%;
+  }
+}
+
