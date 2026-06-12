@@ -8,10 +8,12 @@ import "./css/Public/AnalyticsAndDailyChallenge.css"
 import "./css/Public/AboutAndContactUs.css"
 import "./css/Public/PrivacyAndTermsAndLanguages.css"
 import "./css/Public/ExamPractice.css"
+import "./css/Public/Home_Sidebar.css"
 
 
 import "./css/Components/Navbar.css"
 import "./css/Components/Footer.css"
+import "./css/Components/HandVisualizer.css"
 
 
 import Navbar from './components/Navbar';

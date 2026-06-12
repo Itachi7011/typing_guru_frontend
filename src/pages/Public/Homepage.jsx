@@ -88,7 +88,7 @@ import {
 } from "../../components/Fallback";
 
 import { FINGER_KEY_MAP } from "../../components/Fallback";
-
+import Sidebar, { SbPills, SbToggle } from "../../components/Sidebar";
 import HandVisualizer from "../../components/Handvisualizer";
 
 // ── Virtual keyboard layout ────────────────────────────────────────────────
@@ -558,6 +558,9 @@ export default function TypingCoach() {
     setUserData(g);
     setShowGuestModal(false);
   };
+
+  const textDisplayRef = useRef(null);
+  const [charsPerLine, setCharsPerLine] = useState(70);
 
   // Page tab
   const [tab, setTab] = useState("test");
@@ -1453,6 +1456,33 @@ export default function TypingCoach() {
     }
   }, [testRunning, testDone, sidebarCollapsed]);
 
+  useEffect(() => {
+    const el = textDisplayRef.current;
+    if (!el) return;
+
+    const measure = () => {
+      // Create a hidden span to measure one monospace character width
+      const span = document.createElement("span");
+      span.style.cssText =
+        "position:absolute;visibility:hidden;white-space:pre;font-family:'JetBrains Mono',monospace;font-size:1.05rem;";
+      span.textContent = "x";
+      document.body.appendChild(span);
+      const charWidth = span.getBoundingClientRect().width;
+      document.body.removeChild(span);
+
+      if (charWidth > 0) {
+        const containerWidth = el.getBoundingClientRect().width - 16; // subtract padding
+        const computed = Math.floor(containerWidth / charWidth);
+        setCharsPerLine(Math.max(20, computed));
+      }
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const a11yCls = [
     a11y.dyslexia ? "tc-dyslexia" : "",
     a11y.highContrast ? "tc-hc" : "",
@@ -1482,8 +1512,9 @@ export default function TypingCoach() {
     const rawText = testWords;
 
     // Split into visible lines based on space boundaries
-    const splitIntoLines = (str, maxLineLength = 70) => {
-      const words = str.split(" "); // split ONLY on space – no newline/tab magic
+    const splitIntoLines = (str, maxLineLength = charsPerLine) => {
+      // <-- use charsPerLine
+      const words = str.split(" ");
       const lines = [];
       let currentLine = [];
       let currentLength = 0;
@@ -1547,7 +1578,7 @@ export default function TypingCoach() {
     // Calculate offset for character indexing
     let offset = 0;
     for (let i = 0; i < startLineIndex; i++) {
-      offset += lines[i]?.length || 0;
+      offset += (lines[i]?.length || 0) + 1; // +1 for the space between lines
     }
 
     // Render the visible lines
@@ -1584,7 +1615,7 @@ export default function TypingCoach() {
             {lineChars}
           </div>,
         );
-        globalIndex += line.length;
+        globalIndex += line.length + 1; // +1 for the space between lines
       }
     });
 
@@ -1681,15 +1712,15 @@ export default function TypingCoach() {
             <span>Daily</span>
           </button>
           <div className="tc-pb-right">
-            <button
+            {/* <button
               className="tc-pb-icon"
               onClick={() => setSoundEnabled((s) => !s)}
             >
               {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-            </button>
-            <button className="tc-pb-icon" onClick={toggleTheme}>
+            </button> */}
+            {/* <button className="tc-pb-icon" onClick={toggleTheme}>
               {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
+            </button> */}
             {userData && (
               <div className="tc-pb-chip">
                 <Flame size={13} className="tc-pb-flame" />
@@ -1703,7 +1734,7 @@ export default function TypingCoach() {
 
       {/* ── BODY: SIDEBAR + MAIN ── */}
       <div className="tc-body-layout">
-        {!sidebarCollapsed && (
+        {/* {!sidebarCollapsed && (
           <button
             className="tc-sidebar-toggle-main"
             onClick={() => setSidebarCollapsed(true)}
@@ -1711,9 +1742,9 @@ export default function TypingCoach() {
           >
             <ChevronLeft size={16} />
           </button>
-        )}
+        )} */}
 
-        {sidebarCollapsed && (
+        {/* {sidebarCollapsed && (
           <button
             className="tc-sidebar-toggle-float tc-sidebar-toggle-expand"
             onClick={() => setSidebarCollapsed(false)}
@@ -1721,248 +1752,140 @@ export default function TypingCoach() {
           >
             <ChevronRight size={16} />
           </button>
-        )}
+        )} */}
 
         {/* ── SIDEBAR ── */}
-        <aside
-          className={`tc-sidebar ${sidebarCollapsed ? "tc-sb-collapsed" : ""} ${sidebarBlurred ? "tc-sidebar-blurred" : ""}`}
-        >
-          {!sidebarCollapsed && (
-            <div className="tc-sb-inner">
-              <SideSection label="Language" icon={Globe}>
-                <div className="tc-sb-pills">
-                  {LANGS.map((l) => (
-                    <button
-                      key={l.id}
-                      className={`tc-sb-pill${lang === l.id ? " tc-sb-pill-on" : ""}`}
-                      onClick={() => {
-                        setLang(l.id);
-                        resetTest();
-                      }}
-                    >
-                      {l.flag} {l.label}
-                    </button>
-                  ))}
-                </div>
-              </SideSection>
-
-              <SideSection label="Duration" icon={Clock}>
-                <div className="tc-sb-pills">
-                  {DURATIONS.map((d) => (
-                    <button
-                      key={d.value}
-                      className={`tc-sb-pill${duration === d.value ? " tc-sb-pill-on" : ""}`}
-                      onClick={() => {
-                        setDuration(d.value);
-                        setTimeLeft(d.value);
-                      }}
-                    >
-                      {d.label}
-                    </button>
-                  ))}
-                </div>
-              </SideSection>
-
-              <SideSection label="Content Mode" icon={Layers}>
-                {MODE_GROUPS.map((g) => (
-                  <div key={g.label} className="tc-sb-mode-group">
-                    <div className="tc-sb-mg-label">
-                      <g.icon size={11} />
-                      {g.label}
-                    </div>
-                    <div className="tc-sb-pills">
-                      {g.modes.map((m) => (
-                        <button
-                          key={m.id}
-                          className={`tc-sb-pill${mode === m.id ? " tc-sb-pill-on" : ""}`}
-                          onClick={() => {
-                            setMode(m.id);
-                            resetTest();
-                          }}
-                        >
-                          {m.label}
-                        </button>
-                      ))}
-                    </div>
-                    {mode === "code" && g.label === "Code Typing" && (
-                      <div
-                        className="tc-sb-pills"
-                        style={{ marginTop: "0.3rem" }}
-                      >
-                        {CODE_LANGS.map((cl) => (
-                          <button
-                            key={cl}
-                            className={`tc-sb-pill tc-sb-pill-xs${codeLang === cl ? " tc-sb-pill-on" : ""}`}
-                            onClick={() => {
-                              setCodeLang(cl);
-                              resetTest();
-                            }}
-                          >
-                            {cl}
-                          </button>
-                        ))}
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed((s) => !s)}
+          blurred={sidebarBlurred}
+          isDarkMode={isDarkMode}
+          sections={[
+            {
+              label: "Language",
+              icon: Globe,
+              content: (
+                <SbPills
+                  items={LANGS}
+                  active={lang}
+                  onSelect={(id) => {
+                    setLang(id);
+                    resetTest();
+                  }}
+                />
+              ),
+            },
+            {
+              label: "Duration",
+              icon: Clock,
+              content: (
+                <SbPills
+                  items={DURATIONS.map((d) => ({
+                    id: d.value,
+                    label: d.label,
+                  }))}
+                  active={duration}
+                  onSelect={(v) => {
+                    setDuration(v);
+                    setTimeLeft(v);
+                  }}
+                />
+              ),
+            },
+            {
+              label: "Content Mode",
+              icon: Layers,
+              content: (
+                <div className="sk-sb-mode-groups">
+                  {MODE_GROUPS.map((g) => (
+                    <div key={g.label} className="sk-sb-mode-group">
+                      <div className="sk-sb-mg-label">
+                        <g.icon size={11} />
+                        {g.label}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </SideSection>
-
-              <SideSection label="Options" icon={Monitor} defaultOpen={true}>
-                <div className="tc-sb-opts-list">
-                  {/* Caps Lock toggle — only for alphabetic modes */}
-                  {showCapsOption && (
-                    <div className="tc-sb-opt-row">
-                      <div className="tc-sb-opt-label">
-                        <CaseSensitive size={13} />
-                        <span>Capital Letters</span>
-                      </div>
-                      <div
-                        className={`tc-toggle${capsMode ? " tc-toggle-on" : ""}`}
-                        onClick={() => {
-                          setCapsMode((c) => !c);
+                      <SbPills
+                        items={g.modes}
+                        active={mode}
+                        onSelect={(id) => {
+                          setMode(id);
                           resetTest();
                         }}
-                        role="switch"
-                        aria-checked={capsMode}
-                        tabIndex={0}
-                        onKeyDown={(e) =>
-                          e.key === "Enter" && setCapsMode((c) => !c)
-                        }
                       />
+                      {mode === "code" && g.label === "Code Typing" && (
+                        <SbPills
+                          xs
+                          items={CODE_LANGS.map((c) => ({ id: c, label: c }))}
+                          active={codeLang}
+                          onSelect={(id) => {
+                            setCodeLang(id);
+                            resetTest();
+                          }}
+                        />
+                      )}
                     </div>
-                  )}
-
-                  {/* Add this inside the Options SideSection */}
-                  <div className="tc-sb-opt-row">
-                    <div className="tc-sb-opt-label">
-                      <RefreshCw size={13} />
-                      <span>Reset Word on Error</span>
-                    </div>
-                    <div
-                      className={`tc-toggle${resetOnWordError ? " tc-toggle-on" : ""}`}
-                      onClick={() => setResetOnWordError((r) => !r)}
-                      role="switch"
-                      aria-checked={resetOnWordError}
-                      tabIndex={0}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && setResetOnWordError((r) => !r)
-                      }
-                    />
-                  </div>
-                  {/* Hand Visualizer toggle */}
-                  <div className="tc-sb-opt-row">
-                    <div className="tc-sb-opt-label">
-                      <Hand size={13} />
-                      <span>Hand Guide</span>
-                    </div>
-                    <div
-                      className={`tc-toggle${handVisualizerOn ? " tc-toggle-on" : ""}`}
-                      onClick={() => setHandVisualizerOn((h) => !h)}
-                      role="switch"
-                      aria-checked={handVisualizerOn}
-                      tabIndex={0}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && setHandVisualizerOn((h) => !h)
-                      }
-                    />
-                  </div>
-                  {/* Virtual Keyboard */}
-                  <div className="tc-sb-opt-row">
-                    <div className="tc-sb-opt-label">
-                      <Keyboard size={13} />
-                      <span>Virtual KBD</span>
-                    </div>
-                    <div
-                      className={`tc-toggle${vkbdVisible ? " tc-toggle-on" : ""}`}
-                      onClick={() => setVkbdVisible((v) => !v)}
-                      role="switch"
-                      aria-checked={vkbdVisible}
-                      tabIndex={0}
-                    />
-                  </div>
-                  {/* Device */}
-                  <div className="tc-sb-opt-row">
-                    <div className="tc-sb-opt-label">
-                      <Monitor size={13} />
-                      <span>Device</span>
-                    </div>
-                    <div
-                      className="tc-sb-pills"
-                      style={{ flexDirection: "row", gap: 4 }}
-                    >
-                      <button
-                        className={`tc-sb-pill-xs tc-sb-pill${deviceMode === "keyboard" ? " tc-sb-pill-on" : ""}`}
-                        onClick={() => setDeviceMode("keyboard")}
-                      >
-                        <Monitor size={10} />
-                      </button>
-                      <button
-                        className={`tc-sb-pill-xs tc-sb-pill${deviceMode === "mobile" ? " tc-sb-pill-on" : ""}`}
-                        onClick={() => setDeviceMode("mobile")}
-                      >
-                        <Smartphone size={10} />
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              </SideSection>
-
-              {/* Quick nav */}
-              <div className="tc-sb-quicknav">
-                <button
-                  className="tc-sb-navbtn"
-                  onClick={() => navigate("/drills")}
-                >
-                  <Dumbbell size={13} /> Drill Room
-                </button>
-                <button
-                  className="tc-sb-navbtn"
-                  onClick={() => navigate("/daily-challenge")}
-                >
-                  <CalendarDays size={13} /> Daily Challenge
-                </button>
-              </div>
-            </div>
-          )}
-
-          {sidebarCollapsed && (
-            <div className="tc-sb-mini">
-              <button className="tc-sb-mini-icon" title="Language">
-                <Globe size={15} />
-              </button>
-              <button className="tc-sb-mini-icon" title="Duration">
-                <Clock size={15} />
-              </button>
-              <button className="tc-sb-mini-icon" title="Mode">
-                <Layers size={15} />
-              </button>
-              <button className="tc-sb-mini-icon" title="Options">
-                <Monitor size={15} />
-              </button>
-              <div className="tc-sb-mini-sep" />
-              <button
-                className="tc-sb-mini-icon"
-                title="Drills"
-                onClick={() => navigate("/drills")}
-              >
-                <Dumbbell size={15} />
-              </button>
-              <button
-                className="tc-sb-mini-icon"
-                title="Daily"
-                onClick={() => navigate("/daily-challenge")}
-              >
-                <CalendarDays size={15} />
-              </button>
-            </div>
-          )}
-        </aside>
+              ),
+            },
+            {
+              label: "Options",
+              icon: Monitor,
+              content: (
+                <>
+                  {showCapsOption && (
+                    <SbToggle
+                      label="Capital Letters"
+                      icon={CaseSensitive}
+                      value={capsMode}
+                      onChange={(v) => {
+                        setCapsMode(v);
+                        resetTest();
+                      }}
+                    />
+                  )}
+                  <SbToggle
+                    label="Reset Word on Error"
+                    icon={RefreshCw}
+                    value={resetOnWordError}
+                    onChange={setResetOnWordError}
+                  />
+                  <SbToggle
+                    label="Hand Guide"
+                    icon={Hand}
+                    value={handVisualizerOn}
+                    onChange={setHandVisualizerOn}
+                  />
+                  <SbToggle
+                    label="Virtual KBD"
+                    icon={Keyboard}
+                    value={vkbdVisible}
+                    onChange={setVkbdVisible}
+                  />
+                </>
+              ),
+            },
+          ]}
+          quickNav={[
+            {
+              label: "Drill Room",
+              icon: Dumbbell,
+              onClick: () => navigate("/drills"),
+            },
+            {
+              label: "Daily Challenge",
+              icon: CalendarDays,
+              onClick: () => navigate("/daily-challenge"),
+            },
+          ]}
+        />
 
         {/* ── MAIN CONTENT ── */}
         <main className="tc-main">
           {/* ══ TEST TAB ══ */}
           {tab === "test" && (
-            <div className="tc-test-panel">
+            <div
+              className={`tc-test-panel${handVisualizerOn && testRunning && !testDone ? " tc-test-centered" : ""}`}
+            >
               {/* Live stats bar */}
               <div className="tc-live-bar">
                 <div className="tc-live-stat">
@@ -2032,6 +1955,7 @@ export default function TypingCoach() {
               >
                 <div
                   className="tc-text-disp"
+                  ref={textDisplayRef}
                   aria-live={a11y.screenReader ? "polite" : "off"}
                 >
                   {renderedText}

@@ -351,3 +351,84 @@
     padding: 0.65rem 0.85rem;
   }
 }
+
+/* Mobile overflow fix */
+@media (max-width: 768px) {
+  .sk-nav-inner {
+    gap: 0.5rem;
+    padding: 0.65rem 0.8rem;
+    min-width: 0;
+  }
+
+  .sk-nav-logo {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .sk-logo-text {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .sk-logo-name,
+  .sk-logo-sub {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sk-nav-right {
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  .sk-auth-btn {
+    padding: 0.42rem 0.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sk-nav-inner {
+    padding: 0.6rem;
+    gap: 0.35rem;
+  }
+
+  .sk-logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+
+  .sk-logo-name {
+    font-size: 0.95rem;
+  }
+
+  .sk-logo-sub {
+    font-size: 0.5rem;
+  }
+
+  .sk-auth-btn {
+    padding: 0.4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .sk-nav-links {
+    display: none;
+  }
+
+  .sk-mobile-toggle {
+    display: flex;
+  }
+
+  .sk-mobile-menu {
+    display: none;
+  }
+
+  .sk-mobile-menu.sk-mobile-open {
+    display: flex;
+  }
+
+  .sk-auth-btn span {
+    display: none;
+  }
+}

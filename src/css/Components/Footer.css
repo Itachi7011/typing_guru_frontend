@@ -342,3 +342,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 640px) {
+  .sk-footer-totop {
+    right: 3rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .sk-footer-totop {
+    right: 3.5rem;
+  }
+}

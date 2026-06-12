@@ -1,0 +1,446 @@
+/* HandVisualizer.css - Complete styles for hand visualizer component */
+
+/* Hand Diagram Container Animation */
+@keyframes handAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Finger Pulse Animation */
+@keyframes fingerPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.05);
+    filter: brightness(1.1);
+  }
+}
+
+/* Key Badge Float Animation */
+@keyframes keyFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Shift Badge Pulse Animation */
+@keyframes shiftPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 5px #f59e0b,
+      0 0 10px rgba(245, 158, 11, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 20px #f59e0b,
+      0 0 30px rgba(245, 158, 11, 0.6);
+    transform: scale(1.02);
+  }
+}
+
+/* Glow Pulse Animation */
+@keyframes glowPulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 5px #7c6af7,
+      0 0 10px rgba(124, 106, 247, 0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 15px #7c6af7,
+      0 0 25px rgba(124, 106, 247, 0.4);
+  }
+}
+
+/* Fade In Up Animation for Instruction Hint */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Hand Diagram Component Styles */
+.hand-diagram {
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.hand-diagram:hover {
+  transform: translateY(-4px);
+}
+
+/* Finger Component Styles */
+.finger {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.finger.active {
+  animation: fingerPulse 0.6s ease-in-out;
+}
+
+/* Key Badge Styles */
+.key-badge {
+  animation: keyFloat 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Shift Badge Styles */
+.shift-badge {
+  animation: shiftPulse 0.5s ease-in-out infinite;
+}
+
+/* Hand Container Styles */
+.hand-container-left,
+.hand-container-right {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Main Visualizer Container */
+.hand-visualizer {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* Instruction Hint Styles */
+.instruction-hint {
+  position: absolute;
+  bottom: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  backdrop-filter: blur(8px);
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  white-space: nowrap;
+  font-family: monospace;
+  pointer-events: auto;
+  cursor: default;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Dark Mode Specific Styles */
+.hand-diagram-dark {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 30, 46, 0.95),
+    rgba(20, 20, 35, 0.98)
+  );
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Light Mode Specific Styles */
+.hand-diagram-light {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95),
+    rgba(245, 245, 250, 0.98)
+  );
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Finger Variations */
+.finger-thumb {
+  width: 28px;
+  height: 50px;
+  border-radius: 16px;
+}
+
+.finger-regular {
+  width: 24px;
+  height: 85px;
+  border-radius: 20px;
+}
+
+/* Active Finger Styles */
+.finger-active {
+  transform: translateY(-8px) scale(1.08);
+}
+
+.finger-active-dark {
+  background: linear-gradient(135deg, #7c6af7, #7c6af7dd);
+  box-shadow:
+    0 8px 20px rgba(124, 106, 247, 0.4),
+    0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.finger-inactive-dark {
+  background: linear-gradient(135deg, #2a2a3e, #222235);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.finger-inactive-light {
+  background: linear-gradient(135deg, #f0f0f5, #e8e8f0);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+/* Finger Tip Highlight */
+.finger-tip-highlight {
+  position: absolute;
+  top: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+  opacity: 0.8;
+  animation: glowPulse 1s infinite;
+}
+
+/* Finger Emoji Styles */
+.finger-emoji {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.finger-emoji-active {
+  filter: brightness(1.2);
+}
+
+.finger-emoji-inactive {
+  opacity: 0.5;
+}
+
+/* Finger Label Styles */
+.finger-label {
+  font-size: 9px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.finger-label-active {
+  color: white;
+}
+
+.finger-label-inactive-dark {
+  color: #888;
+}
+
+.finger-label-inactive-light {
+  color: #999;
+}
+
+/* Hand Label Styles */
+.hand-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 4px;
+  border-radius: 8px;
+  transition: color 0.3s;
+}
+
+.hand-label-shift {
+  color: #f59e0b;
+}
+
+.hand-label-active {
+  color: #7c6af7;
+}
+
+.hand-label-inactive-dark {
+  color: #666;
+}
+
+.hand-label-inactive-light {
+  color: #999;
+}
+
+/* Shift Badge Specific */
+.shift-badge-left {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #f59e0b, #f59e0bdd);
+  color: white;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 10;
+  letter-spacing: 1px;
+}
+
+/* Key Badge Specific */
+.key-badge-display {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #7c6af7, #7c6af7dd);
+  color: white;
+  border-radius: 12px;
+  padding: 4px 10px;
+  font-size: 14px;
+  font-weight: bold;
+  font-family: monospace;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(124, 106, 247, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  z-index: 10;
+}
+
+/* Container Opacity States */
+.hand-container-visible {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  filter: none;
+}
+
+.hand-container-dimmed {
+  opacity: 0.5;
+  filter: grayscale(0.3) blur(1px);
+}
+
+.hand-container-dimmed-left {
+  transform: translateX(-10px) scale(0.95);
+}
+
+.hand-container-dimmed-right {
+  transform: translateX(10px) scale(0.95);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .hand-visualizer {
+    padding: 0 20px;
+  }
+
+  .hand-diagram {
+    width: 130px !important;
+    padding: 15px 8px !important;
+  }
+
+  .finger-regular {
+    width: 20px !important;
+    height: 70px !important;
+  }
+
+  .finger-thumb {
+    width: 24px !important;
+    height: 45px !important;
+  }
+
+  .key-badge-display {
+    font-size: 11px !important;
+    padding: 3px 8px !important;
+    top: -25px !important;
+  }
+
+  .instruction-hint {
+    font-size: 11px !important;
+    padding: 8px 16px !important;
+    bottom: -70px !important;
+    white-space: nowrap;
+  }
+
+  .shift-badge-left {
+    font-size: 9px !important;
+    padding: 3px 8px !important;
+    top: -12px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .hand-visualizer {
+    padding: 0 10px;
+  }
+
+  .hand-diagram {
+    width: 110px !important;
+    padding: 12px 6px !important;
+  }
+
+  .finger-regular {
+    width: 18px !important;
+    height: 60px !important;
+  }
+
+  .finger-thumb {
+    width: 20px !important;
+    height: 40px !important;
+  }
+
+  .finger-emoji {
+    font-size: 12px !important;
+  }
+
+  .finger-label {
+    font-size: 7px !important;
+  }
+
+  .hand-label {
+    font-size: 0.6rem !important;
+    letter-spacing: 1px !important;
+  }
+
+  .instruction-hint {
+    font-size: 9px !important;
+    padding: 6px 12px !important;
+    bottom: -60px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hand-visualizer {
+    display: none !important; /* Hide on very small screens */
+  }
+}
+
+@media (max-width: 1024px) {
+  .hv-root {
+    display: none !important;
+  }
+  /* .tc-test-centered {
+    max-width: 100%;
+  } */
+}

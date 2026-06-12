@@ -692,6 +692,7 @@ export default function HandVisualizer({
 
   return (
     <div
+    className="hv-root"
       style={{
         position: "fixed",
         top: "50%",
@@ -704,6 +705,7 @@ export default function HandVisualizer({
         padding: "0 40px",
         pointerEvents: "none",
         zIndex: 10000,
+        
       }}
     >
       {/* Left hand container */}
