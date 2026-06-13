@@ -561,7 +561,8 @@ export default function TypingCoach() {
 
   const textDisplayRef = useRef(null);
   const [charsPerLine, setCharsPerLine] = useState(70);
-
+  const [handVisualizerActive, setHandVisualizerActive] = useState(false);
+  
   // Page tab
   const [tab, setTab] = useState("test");
 
@@ -1483,6 +1484,21 @@ export default function TypingCoach() {
     return () => ro.disconnect();
   }, []);
 
+    useEffect(() => {
+    // Hand visualizer is active when:
+    // 1. handVisualizerOn is true
+    // 2. testRunning is true
+    // 3. testDone is false
+    // 4. user has started typing (userInput.length > 0)
+    const isActive = handVisualizerOn && testRunning && !testDone && userInput.length > 0;
+    
+    if (isActive && !handVisualizerActive) {
+      setHandVisualizerActive(true);
+    } else if (!isActive && handVisualizerActive) {
+      setHandVisualizerActive(false);
+    }
+  }, [handVisualizerOn, testRunning, testDone, userInput.length, handVisualizerActive]);
+
   const a11yCls = [
     a11y.dyslexia ? "tc-dyslexia" : "",
     a11y.highContrast ? "tc-hc" : "",
@@ -1706,7 +1722,7 @@ export default function TypingCoach() {
           </button>
           <button
             className="tc-pb-btn"
-            onClick={() => navigate("/daily-challenge")}
+            onClick={() => navigate("/daily")}
           >
             <CalendarDays size={15} />
             <span>Daily</span>
@@ -1880,8 +1896,7 @@ export default function TypingCoach() {
         />
 
         {/* ── MAIN CONTENT ── */}
-        <main className="tc-main">
-          {/* ══ TEST TAB ══ */}
+        <main className={`tc-main ${handVisualizerActive ? 'hand-visualizer-active' : ''}`}>          {/* ══ TEST TAB ══ */}
           {tab === "test" && (
             <div
               className={`tc-test-panel${handVisualizerOn && testRunning && !testDone ? " tc-test-centered" : ""}`}

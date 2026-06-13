@@ -3,22 +3,21 @@ import { ThemeContext } from "./context/ThemeContext";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import "./App.css";
-import "./css/Public/Homepage.css"
-import "./css/Public/AnalyticsAndDailyChallenge.css"
-import "./css/Public/AboutAndContactUs.css"
-import "./css/Public/PrivacyAndTermsAndLanguages.css"
-import "./css/Public/ExamPractice.css"
-import "./css/Public/Home_Sidebar.css"
-import "./css/Public/Drill.css"
+import "./css/Public/Homepage.css";
+import "./css/Public/AnalyticsAndDailyChallenge.css";
+import "./css/Public/AboutAndContactUs.css";
+import "./css/Public/PrivacyAndTermsAndLanguages.css";
+import "./css/Public/ExamPractice.css";
+import "./css/Public/Home_Sidebar.css";
+import "./css/Public/Drill.css";
+import "./css/Users/Auth.css";
 
+import "./css/Components/Navbar.css";
+import "./css/Components/Footer.css";
+import "./css/Components/HandVisualizer.css";
 
-import "./css/Components/Navbar.css"
-import "./css/Components/Footer.css"
-import "./css/Components/HandVisualizer.css"
-
-
-import Navbar from './components/Navbar';
-import Footer from './components/Footer';
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 // import NotificationAlertDisplay from './components/Footer';
 // import FloatingActionButton from './components/FloatingActionButton';
 import Homepage from "./pages/Public/Homepage";
@@ -31,9 +30,11 @@ import TermsOfService from "./pages/Public/TermsOfService";
 import LanguagesDescription from "./pages/Public/LanguagesDescription";
 import ExamPractice from "./pages/Public/ExamPractice";
 
+import Signup from "./pages/Users/auth/Signup";
+import Login from "./pages/Users/auth/Login";
+import ForgotPassword from "./pages/Users/auth/ForgotPassword";
+import Verification from "./pages/Users/auth/Verification";
 import Analytics from "./pages/Users/Analytics";
-
-
 
 // import Error404 from './components/Error/Error404';
 
@@ -52,7 +53,7 @@ function App() {
           <FloatingActionButton /> */}
 
           {/* <AdminNavSidebar /> */}
-           <Navbar />
+          <Navbar />
           <Routes>
             <Route path="/" element={<Homepage />} />
             <Route path="/drills" element={<Drill />} />
@@ -64,8 +65,11 @@ function App() {
             <Route path="/languages" element={<LanguagesDescription />} />
             <Route path="/exams" element={<ExamPractice />} />
 
+            <Route path="/user/auth/signup" element={<Signup />} />
+            <Route path="/user/auth/login" element={<Login />} />
+            <Route path="/user/auth/forgot-password" element={<ForgotPassword />} />
+            <Route path="/user/auth/verification" element={<Verification />} />
             <Route path="/user/analytics" element={<Analytics />} />
-            
 
             {/* <Route path="*" element={<Error404 />} /> */}
           </Routes>

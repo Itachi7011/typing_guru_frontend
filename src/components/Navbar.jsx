@@ -103,8 +103,8 @@ export default function Navbar() {
   const AUTH_MENU = [
     { label: "Login", path: "/user/auth/login", icon: LogIn },
     { label: "Sign Up", path: "/user/auth/signup", icon: UserPlus },
-    { label: "Admin Login", icon: Shield, admin: true },
-    { label: "Admin Signup", icon: Shield, admin: true },
+    // { label: "Admin Login", icon: Shield, admin: true },
+    // { label: "Admin Signup", icon: Shield, admin: true },
   ];
 
   const isLoggedIn = userData?.guestId || userData?.userId;
@@ -121,7 +121,7 @@ export default function Navbar() {
             <Zap size={22} />
           </div>
           <div className="sk-logo-text">
-            <span className="sk-logo-name">Typing Guru</span>
+            <span className="sk-logo-name">Typing Exam Hub</span>
             <span className="sk-logo-sub">Typing Coach</span>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function Navbar() {
           </button>
 
           {/* Auth dropdown */}
-          {/* <div className="sk-nav-item">
+         <div className="sk-nav-item">
             <button
               className={`sk-auth-btn ${openDropdown === "auth" ? "sk-drop-open" : ""}`}
               onClick={() => toggleDrop("auth")}
@@ -223,7 +223,7 @@ export default function Navbar() {
                 ))}
               </div>
             )}
-          </div> */}
+          </div>
 
           {/* Mobile toggle */}
           <button

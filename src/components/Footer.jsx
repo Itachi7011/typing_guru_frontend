@@ -1,4 +1,4 @@
-// Footer.jsx — SwiftKeys Global Footer
+// Footer.jsx — Typing Exam Hub Global Footer
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../context/ThemeContext";
@@ -96,7 +96,7 @@ export default function Footer() {
               </div>
 
               <div>
-                <span className="sk-footer-logo-name">SwiftKeys</span>
+                <span className="sk-footer-logo-name">Typing Exam Hub</span>
                 <span className="sk-footer-logo-sub">Typing Coach</span>
               </div>
             </div>
@@ -193,7 +193,7 @@ export default function Footer() {
 
         <div className="sk-footer-bottom">
           <span>
-            © {new Date().getFullYear()} SwiftKeys. All rights reserved.
+            © {new Date().getFullYear()} Typing Exam Hub. All rights reserved.
           </span>
 
           <span className="sk-footer-made">
