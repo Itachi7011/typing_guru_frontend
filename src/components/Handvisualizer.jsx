@@ -784,15 +784,15 @@ export default function HandVisualizer({
           letterSpacing: "0.5px",
         }}
       >
-        <style>
+        <style> 
           {`
-            @keyframes fadeInUp {
-              from {
+            @keyframes fadeInUp {  
+              from { 
                 opacity: 0;
                 transform: translateX(-50%) translateY(10px);
-              }
+              } 
               to {
-                opacity: 1;
+                opacity: 1; 
                 transform: translateX(-50%) translateY(0);
               }
             }
