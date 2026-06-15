@@ -4,17 +4,21 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import "./App.css";
 import "./css/Public/Homepage.css";
-import "./css/Public/AnalyticsAndDailyChallenge.css";
+import "./css/Public/Analytics.css";
 import "./css/Public/AboutAndContactUs.css";
 import "./css/Public/PrivacyAndTermsAndLanguages.css";
 import "./css/Public/ExamPractice.css";
 import "./css/Public/Home_Sidebar.css";
 import "./css/Public/Drill.css";
+import "./css/Public/DailyChallenge.css";
+
 import "./css/Users/Auth.css";
+import "./css/Users/Profile.css";
 
 import "./css/Components/Navbar.css";
 import "./css/Components/Footer.css";
 import "./css/Components/HandVisualizer.css";
+import "./css/Components/ErrorPage.css";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -34,9 +38,10 @@ import Signup from "./pages/Users/auth/Signup";
 import Login from "./pages/Users/auth/Login";
 import ForgotPassword from "./pages/Users/auth/ForgotPassword";
 import Verification from "./pages/Users/auth/Verification";
+import Profile from "./pages/Users/Profile";
 import Analytics from "./pages/Users/Analytics";
 
-// import Error404 from './components/Error/Error404';
+import Error404 from './components/Error/Error404';
 
 function App() {
   const { isDarkMode } = useContext(ThemeContext);
@@ -69,9 +74,10 @@ function App() {
             <Route path="/user/auth/login" element={<Login />} />
             <Route path="/user/auth/forgot-password" element={<ForgotPassword />} />
             <Route path="/user/auth/verification" element={<Verification />} />
+            <Route path="/user/profile" element={<Profile />} />
             <Route path="/user/analytics" element={<Analytics />} />
 
-            {/* <Route path="*" element={<Error404 />} /> */}
+            <Route path="*" element={<Error404 />} />
           </Routes>
 
           <Footer />

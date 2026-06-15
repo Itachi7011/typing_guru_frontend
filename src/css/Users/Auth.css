@@ -828,3 +828,65 @@
 .teh-google-icon {
   flex-shrink: 0;
 }
+
+/* Verification page styles */
+.teh-verify-input-group {
+  margin-top: 16px;
+  padding: 12px;
+  background: var(--bg-secondary, #f5f5f5);
+  border-radius: 8px;
+}
+
+.teh-verify-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: var(--bg-info, #e3f2fd);
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.teh-verify-edit-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #4a90e2;
+}
+
+.teh-verify-edit-btn:hover {
+  background: rgba(74, 144, 226, 0.1);
+}
+
+.teh-verify-update-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.teh-verify-update-btn:hover {
+  background: #357abd;
+}
+
+/* Dark mode adjustments */
+.dark .teh-verify-info {
+  background: #1a2332;
+}
+
+.dark .teh-verify-input-group {
+  background: #1a2332;
+}

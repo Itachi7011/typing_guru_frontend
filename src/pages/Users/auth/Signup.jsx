@@ -58,13 +58,24 @@ export default function Signup() {
     }
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch("/api/user/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, phone, password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Signup failed");
+
+      // Store user data for verification page
+      localStorage.setItem(
+        "pendingVerification",
+        JSON.stringify({
+          email: email,
+          phone: phone,
+          userId: data.userId,
+        }),
+      );
+
       Swal.fire({
         icon: "success",
         title: "Account created!",
@@ -72,7 +83,14 @@ export default function Signup() {
         background: isDarkMode ? "#0d1117" : "#fff",
         color: isDarkMode ? "#e6edf3" : "#0d1117",
       });
-      navigate("/auth/verify");
+      // Navigate to verify page with user data
+      navigate("/user/auth/verification", {
+        state: {
+          email: email,
+          phone: phone,
+          userId: data.userId,
+        },
+      });
     } catch (err) {
       Swal.fire({
         icon: "error",
@@ -90,7 +108,7 @@ export default function Signup() {
     setGoogleLoading(true);
     try {
       // Redirect to Google OAuth endpoint
-      window.location.href = "/api/auth/google";
+      window.location.href = "/api/user/auth/google";
     } catch (err) {
       Swal.fire({
         icon: "error",

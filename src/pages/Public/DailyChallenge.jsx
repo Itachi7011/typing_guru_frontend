@@ -6,7 +6,7 @@ import React, {
   useContext,
   useMemo,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ThemeContext } from "../../context/ThemeContext";
 import {
   CalendarDays,
@@ -32,6 +32,12 @@ import {
   Award,
   TrendingUp,
   Sparkles,
+  Menu,
+  X,
+  Home,
+  Keyboard,
+  BarChart3,
+  Dumbbell,
 } from "lucide-react";
 import {
   lsGet,
@@ -211,6 +217,45 @@ export default function DailyChallenge() {
     streak: lsGet("dc_streak") || 0,
   });
 
+  // ── Sidebar (mobile hamburger) ──────────────────────────────
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ── Dynamic line width (chars per line) based on container size ──
+  const [maxLineLen, setMaxLineLen] = useState(65);
+  const typeWrapRef = useRef(null);
+
+  useEffect(() => {
+    const calcLineLen = () => {
+      const el = typeWrapRef.current;
+      const width = el ? el.clientWidth : window.innerWidth;
+      // approximate monospace char width relative to font-size:
+      // font-size scales via clamp(0.74rem..1.05rem) depending on width.
+      // We derive an effective char width (~0.62 * font-size in px).
+      let fontPx;
+      if (width <= 360) fontPx = 13;
+      else if (width <= 480) fontPx = 14;
+      else if (width <= 768) fontPx = 15.5;
+      else fontPx = 16.8; // ~1.05rem
+      // slightly wider effective char width + extra safety margin so
+      // justified (space-between) lines never overflow horizontally
+      const charWidth = fontPx * 0.62;
+      const usablePadding = width <= 480 ? 24 : 36; // padding inside dc-type-area + text-disp + safety
+      const usableWidth = Math.max(width - usablePadding, 100);
+      let chars = Math.floor(usableWidth / charWidth);
+      // clamp to sensible bounds so layout never gets too sparse/dense
+      chars = Math.max(18, Math.min(chars, 95));
+      setMaxLineLen(chars);
+    };
+
+    calcLineLen();
+    window.addEventListener("resize", calcLineLen);
+    window.addEventListener("orientationchange", calcLineLen);
+    return () => {
+      window.removeEventListener("resize", calcLineLen);
+      window.removeEventListener("orientationchange", calcLineLen);
+    };
+  }, []);
+
   const inputRef = useRef(null);
   const timerRef = useRef(null);
   const wpmTickRef = useRef(null);
@@ -281,22 +326,19 @@ export default function DailyChallenge() {
     } catch {}
   }
 
-
-  // Add this useEffect after your other useEffects
-useEffect(() => {
-  if (testRunning && !testDone && userInput.length > 0) {
-    // Scroll to the current character position
-    const textDisplay = document.querySelector('.dc-text-disp');
-    const currentChar = document.querySelector('.dc-ch-cur');
-    if (textDisplay && currentChar) {
-      currentChar.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'nearest'
-      });
+  // Auto-scroll to current character position
+  useEffect(() => {
+    if (testRunning && !testDone && userInput.length > 0) {
+      const currentChar = document.querySelector(".dcr-text-disp .dc-ch-cur");
+      if (currentChar) {
+        currentChar.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      }
     }
-  }
-}, [userInput, testRunning, testDone]);
+  }, [userInput, testRunning, testDone]);
 
   useEffect(() => {
     if (testRunning && !testDone) {
@@ -401,154 +443,142 @@ useEffect(() => {
     setTimeout(() => setPhase("results"), 400);
   }
 
-  // Rendered text
-const renderedText = useMemo(() => {
-  const text = testWords || "";
-  
-  // Function to wrap text at word boundaries and fill lines optimally
-  const wrapText = (str, maxLineLength) => {
-    const words = str.split(/(\s+)/);
-    const lines = [];
-    let currentLine = "";
-    
-    words.forEach((word) => {
-      // Handle spaces specially
-      if (word.match(/^\s+$/)) {
-        // This is a space or spaces
-        if (currentLine.length + word.length <= maxLineLength) {
-          currentLine += word;
+  // Rendered text — now uses dynamic maxLineLen (responsive!)
+  const renderedText = useMemo(() => {
+    const text = testWords || "";
+
+    // Function to wrap text at word boundaries WITHOUT dropping any
+    // characters — every character in `str` must end up in `lines`,
+    // in the same order, so character indices stay perfectly in sync
+    // with userInput.length.
+    const wrapText = (str, maxLineLength) => {
+      const words = str.split(/(\s+)/);
+      const lines = [];
+      let currentLine = "";
+
+      words.forEach((word) => {
+        if (word.match(/^\s+$/)) {
+          // Whitespace chunk: try to keep it on the current line.
+          if (
+            currentLine.length + word.length <= maxLineLength ||
+            currentLine.length === 0
+          ) {
+            currentLine += word;
+          } else {
+            // Doesn't fit — push current line as-is, then carry the
+            // whitespace over to the start of the next line instead
+            // of discarding it.
+            lines.push(currentLine);
+            currentLine = word;
+          }
         } else {
-          // Spaces at the end of a line - just start new line without spaces
-          if (currentLine) lines.push(currentLine);
-          currentLine = "";
+          const testLine = currentLine + word;
+          if (testLine.length > maxLineLength && currentLine.length > 0) {
+            lines.push(currentLine);
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
         }
+      });
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+
+      return lines.map((line) => line.split(""));
+    };
+
+    // Dynamic max line length based on screen/container width
+    const lines = wrapText(text, maxLineLen);
+
+    if (lines.length === 0) {
+      lines.push([]);
+    }
+
+    // Find which line contains the current typing position
+    let charCount = 0;
+    let currentLineIndex = 0;
+    for (let i = 0; i < lines.length; i++) {
+      const lineStart = charCount;
+      const lineEnd = charCount + lines[i].length;
+      if (userInput.length >= lineStart && userInput.length <= lineEnd) {
+        currentLineIndex = i;
+        break;
+      }
+      charCount += lines[i].length;
+    }
+
+    // Calculate visible lines — always show exactly 5 lines
+    let startLineIndex = 0;
+    let endLineIndex;
+
+    if (currentLineIndex >= 3) {
+      startLineIndex = Math.max(0, currentLineIndex - 2);
+      endLineIndex = Math.min(lines.length, startLineIndex + 5);
+      if (endLineIndex === lines.length && endLineIndex - startLineIndex < 5) {
+        startLineIndex = Math.max(0, endLineIndex - 5);
+      }
+    } else {
+      endLineIndex = Math.min(5, lines.length);
+    }
+
+    const visibleLines = [...lines.slice(startLineIndex, endLineIndex)];
+
+    const emptyLinesNeeded = Math.max(0, 5 - visibleLines.length);
+    for (let i = 0; i < emptyLinesNeeded; i++) {
+      visibleLines.push([]);
+    }
+
+    let offset = 0;
+    for (let i = 0; i < startLineIndex; i++) {
+      offset += lines[i]?.length || 0;
+    }
+
+    const renderedChars = [];
+    let globalIndex = offset;
+
+    visibleLines.forEach((line, lineIdx) => {
+      if (line.length === 0) {
+        renderedChars.push(
+          <div key={`empty-line-${lineIdx}`} className="dcr-empty-line">
+            <span className="dcr-placeholder-dots">··········</span>
+          </div>,
+        );
       } else {
-        // This is a real word
-        const testLine = currentLine + word;
-        
-        if (testLine.length > maxLineLength && currentLine.length > 0) {
-          // Current line is full, push it and start new line with this word
-          lines.push(currentLine);
-          currentLine = word;
-        } else {
-          // Add word to current line
-          currentLine = testLine;
-        }
+        const lineChars = [];
+        line.forEach((ch, charIdx) => {
+          const absoluteIndex = globalIndex + charIdx;
+          let cls = "dc-ch-pend";
+          if (absoluteIndex < userInput.length) {
+            cls = userInput[absoluteIndex] === ch ? "dc-ch-ok" : "dc-ch-err";
+          }
+          lineChars.push(
+            <span
+              key={absoluteIndex}
+              className={`${cls}${absoluteIndex === userInput.length ? " dc-ch-cur" : ""}`}
+            >
+              {ch}
+            </span>,
+          );
+        });
+
+        const isLastLine = lineIdx === visibleLines.length - 1;
+        renderedChars.push(
+          <div
+            key={`line-${lineIdx}`}
+            className={`dcr-text-line${isLastLine ? " dcr-line-last" : ""}`}
+          >
+            {lineChars}
+          </div>,
+        );
+        globalIndex += line.length;
       }
     });
-    
-    // Push the last line if it has content
-    if (currentLine) {
-      lines.push(currentLine);
-    }
-    
-    // Optional: Try to balance the lines for better visual appearance
-    return lines.map(line => line.split(""));
-  };
-  
-  // Use a more generous max line length to fill the container
-  // The actual pixel width will be handled by CSS, but we'll aim for ~60-70 chars
-  const lines = wrapText(text, 65);
-  
-  // If no lines were created (empty text), add an empty line
-  if (lines.length === 0) {
-    lines.push([]);
-  }
-  
-  // Find which line contains the current typing position
-  let charCount = 0;
-  let currentLineIndex = 0;
-  for (let i = 0; i < lines.length; i++) {
-    const lineStart = charCount;
-    const lineEnd = charCount + lines[i].length;
-    if (userInput.length >= lineStart && userInput.length <= lineEnd) {
-      currentLineIndex = i;
-      break;
-    }
-    charCount += lines[i].length;
-  }
-  
-  // Calculate visible lines - always show exactly 5 lines
-  let startLineIndex = 0;
-  let endLineIndex;
-  
-  if (currentLineIndex >= 3) {
-    // After completing 3 lines, keep current line in the middle
-    startLineIndex = Math.max(0, currentLineIndex - 2);
-    endLineIndex = Math.min(lines.length, startLineIndex + 5);
-    
-    // If near the end, adjust to show last lines
-    if (endLineIndex === lines.length && endLineIndex - startLineIndex < 5) {
-      startLineIndex = Math.max(0, endLineIndex - 5);
-    }
-  } else {
-    // Show first 5 lines
-    endLineIndex = Math.min(5, lines.length);
-  }
-  
-  // Get visible lines
-  const visibleLines = [...lines.slice(startLineIndex, endLineIndex)];
-  
-  // Calculate how many empty lines we need to reach 5 total
-  const emptyLinesNeeded = Math.max(0, 5 - visibleLines.length);
-  
-  // Add empty lines at the end if needed
-  for (let i = 0; i < emptyLinesNeeded; i++) {
-    visibleLines.push([]);
-  }
-  
-  // Calculate offset for character indexing
-  let offset = 0;
-  for (let i = 0; i < startLineIndex; i++) {
-    offset += lines[i]?.length || 0;
-  }
-  
-  // Render
-  const renderedChars = [];
-  let globalIndex = offset;
-  
-  visibleLines.forEach((line, lineIdx) => {
-    if (line.length === 0) {
-      // Empty line placeholder - make it span full width
-      renderedChars.push(
-        <div key={`empty-line-${lineIdx}`} className="dc-empty-line">
-          <span className="dc-placeholder-dots">··········</span>
-        </div>
-      );
-    } else {
-      // Create a flex container for each line to utilize full width
-      const lineText = line.join("");
-      const lineChars = [];
-      
-      // Render characters with proper spacing
-      line.forEach((ch, charIdx) => {
-        const absoluteIndex = globalIndex + charIdx;
-        let cls = "dc-ch-pend";
-        if (absoluteIndex < userInput.length) {
-          cls = userInput[absoluteIndex] === ch ? "dc-ch-ok" : "dc-ch-err";
-        }
-        lineChars.push(
-          <span
-            key={absoluteIndex}
-            className={`${cls}${absoluteIndex === userInput.length ? " dc-ch-cur" : ""}`}
-          >
-            {ch}
-          </span>
-        );
-      });
-      
-      // Wrap each line in a div that can be styled to use full width
-      renderedChars.push(
-        <div key={`line-${lineIdx}`} className="dc-text-line">
-          {lineChars}
-        </div>
-      );
-      globalIndex += line.length;
-    }
-  });
-  
-  return renderedChars;
-}, [testWords, userInput]);
+
+    return renderedChars;
+  }, [testWords, userInput, maxLineLen]);
+
   const timerPct = (timeLeft / todayChallenge.duration) * 100;
   const timerColor =
     timerPct > 50
@@ -574,32 +604,83 @@ const renderedText = useMemo(() => {
 
   return (
     <div className={`dc-root ${isDarkMode ? "dark" : "light"}`}>
-      {/* Navbar */}
-      {/* <nav className="dc-nav">
-        <div className="dc-nav-inner">
-          <button className="dc-nav-back" onClick={() => navigate(-1)}>
-            <ArrowLeft size={15} /> Back
+      {/* ── Mobile hamburger menu toggle ── */}
+      <button
+        className="dcr-menu-toggle"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Open menu"
+      >
+        <Menu size={20} />
+      </button>
+
+      {/* ── Sidebar overlay (mobile/tablet) ── */}
+      <div
+        className={`dcr-sidebar-overlay${sidebarOpen ? " dcr-overlay-open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* ── Collapsible sidebar (mobile/tablet) ── */}
+      <aside className={`dcr-sidebar${sidebarOpen ? " dcr-sidebar-open" : ""}`}>
+        <div className="dcr-sidebar-header">
+          <span>
+            <Keyboard
+              size={16}
+              style={{ marginRight: "0.4rem", verticalAlign: "-2px" }}
+            />
+            SwiftKeys
+          </span>
+          <button
+            className="dcr-sidebar-close"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+          >
+            <X size={16} />
           </button>
-          <div className="dc-nav-title">
-            <CalendarDays size={17} /> Daily Challenge
-          </div>
-          <div className="dc-nav-right">
-            <div className="dc-streak-chip">
-              <Flame size={13} className="dc-flame" />
-              <span>{streakData.streak} day streak</span>
-            </div>
-            <button
-              className="dc-icon-btn"
-              onClick={() => setSoundEnabled((s) => !s)}
-            >
-              {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
-            </button>
-            <button className="dc-icon-btn" onClick={toggleTheme}>
-              {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
-            </button>
-          </div>
         </div>
-      </nav> */}
+        <nav className="dcr-sidebar-body">
+          <Link
+            to="/"
+            className="dcr-sidebar-link"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Home size={15} /> Home
+          </Link>
+          <Link
+            to="/drills"
+            className="dcr-sidebar-link"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Dumbbell size={15} /> Drills
+          </Link>
+          <Link
+            to="/daily-challenge"
+            className="dcr-sidebar-link dcr-link-active"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <CalendarDays size={15} /> Daily Challenge
+          </Link>
+          <Link
+            to="/analytics"
+            className="dcr-sidebar-link"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <BarChart3 size={15} /> Analytics
+          </Link>
+          <button
+            className="dcr-sidebar-link"
+            onClick={() => {
+              setSoundEnabled((s) => !s);
+            }}
+          >
+            {soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
+            Sound {soundEnabled ? "On" : "Off"}
+          </button>
+          <button className="dcr-sidebar-link" onClick={toggleTheme}>
+            {isDarkMode ? <Sun size={15} /> : <Moon size={15} />}
+            {isDarkMode ? "Light Mode" : "Dark Mode"}
+          </button>
+        </nav>
+      </aside>
 
       <main className="dc-main">
         {/* ── INTRO PHASE ── */}
@@ -778,7 +859,9 @@ const renderedText = useMemo(() => {
             <div
               className={`dc-type-area${testRunning && !testDone ? " dc-type-active" : ""}`}
             >
-              <div className="dc-text-disp">{renderedText}</div>
+              <div className="dcr-type-wrap" ref={typeWrapRef}>
+                <div className="dcr-text-disp">{renderedText}</div>
+              </div>
               <textarea
                 ref={inputRef}
                 className="dc-input"

@@ -24,7 +24,7 @@ export default function ForgotPassword() {
     if (!email) return Swal.fire({ icon: "warning", title: "Enter your email", background: bg, color: col });
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await fetch("/api/user/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -55,7 +55,7 @@ export default function ForgotPassword() {
     if (resendTimer > 0) return;
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await fetch("/api/user/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -96,7 +96,7 @@ export default function ForgotPassword() {
     if (code.length < 6) return Swal.fire({ icon: "warning", title: "Enter full 6-digit OTP", background: bg, color: col });
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/verify-reset-otp", {
+      const res = await fetch("/api/user/auth/verify-reset-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: code }),
@@ -120,7 +120,7 @@ export default function ForgotPassword() {
     if (pw.length < 8) return Swal.fire({ icon: "warning", title: "Password too short", text: "Minimum 8 characters.", background: bg, color: col });
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/reset-password", {
+      const res = await fetch("/api/user/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, otp: otp.join(""), newPassword: pw }),

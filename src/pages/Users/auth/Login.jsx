@@ -17,22 +17,50 @@ export default function Login() {
   const submit = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) {
-      Swal.fire({ icon: "warning", title: "Fill all fields", background: isDarkMode ? "#0d1117" : "#fff", color: isDarkMode ? "#e6edf3" : "#0d1117" });
+      Swal.fire({
+        icon: "warning",
+        title: "Fill all fields",
+        background: isDarkMode ? "#0d1117" : "#fff",
+        color: isDarkMode ? "#e6edf3" : "#0d1117",
+      });
       return;
     }
+
     setLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/user/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
+        credentials: "include", // Important: This sends cookies
       });
+
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.message || "Login failed");
-      Swal.fire({ icon: "success", title: "Welcome back!", timer: 1500, showConfirmButton: false, background: isDarkMode ? "#0d1117" : "#fff", color: isDarkMode ? "#e6edf3" : "#0d1117" });
-      setTimeout(() => navigate("/dashboard"), 1600);
+
+      // Store user data in localStorage (but not tokens - they're in cookies)
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("isLoggedIn", "true");
+
+      Swal.fire({
+        icon: "success",
+        title: "Welcome back!",
+        timer: 1500,
+        showConfirmButton: false,
+        background: isDarkMode ? "#0d1117" : "#fff",
+        color: isDarkMode ? "#e6edf3" : "#0d1117",
+      });
+
+      setTimeout(() => navigate("/user/profile"), 1600);
     } catch (err) {
-      Swal.fire({ icon: "error", title: "Login failed", text: err.message, background: isDarkMode ? "#0d1117" : "#fff", color: isDarkMode ? "#e6edf3" : "#0d1117" });
+      Swal.fire({
+        icon: "error",
+        title: "Login failed",
+        text: err.message,
+        background: isDarkMode ? "#0d1117" : "#fff",
+        color: isDarkMode ? "#e6edf3" : "#0d1117",
+      });
     } finally {
       setLoading(false);
     }
@@ -42,7 +70,9 @@ export default function Login() {
     <div className={`teh-auth-root ${isDarkMode ? "dark" : "light"}`}>
       <div className="teh-auth-card">
         <div className="teh-auth-brand">
-          <div className="teh-auth-logo"><Keyboard size={20} /></div>
+          <div className="teh-auth-logo">
+            <Keyboard size={20} />
+          </div>
           <span>Typing Exam Hub</span>
         </div>
 
@@ -68,7 +98,12 @@ export default function Login() {
           <div className="teh-auth-field">
             <div className="teh-auth-label-row">
               <label className="teh-auth-label">Password</label>
-              <Link to="/auth/forgot-password" className="teh-auth-link teh-auth-link-sm">Forgot password?</Link>
+              <Link
+                to="/auth/forgot-password"
+                className="teh-auth-link teh-auth-link-sm"
+              >
+                Forgot password?
+              </Link>
             </div>
             <div className="teh-auth-input-wrap">
               <input
@@ -80,25 +115,71 @@ export default function Login() {
                 onChange={change}
                 autoComplete="current-password"
               />
-              <button type="button" className="teh-auth-eye" onClick={() => setShow(!show)} tabIndex={-1}>
+              <button
+                type="button"
+                className="teh-auth-eye"
+                onClick={() => setShow(!show)}
+                tabIndex={-1}
+              >
                 {show ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
           </div>
 
           <button type="submit" className="teh-auth-btn" disabled={loading}>
-            {loading ? <span className="teh-auth-spinner" /> : <><LogIn size={16} /> Sign In</>}
+            {loading ? (
+              <span className="teh-auth-spinner" />
+            ) : (
+              <>
+                <LogIn size={16} /> Sign In
+              </>
+            )}
           </button>
         </form>
 
         <p className="teh-auth-footer-text">
-          No account? <Link to="/auth/signup" className="teh-auth-link">Create one</Link>
+          No account?{" "}
+          <Link to="/auth/signup" className="teh-auth-link">
+            Create one
+          </Link>
         </p>
       </div>
 
       <div className="teh-auth-keys-bg" aria-hidden="true">
-        {["A","S","D","F","J","K","L",";","Q","W","E","R","T","Y","U","I","O","P","Z","X","C","V","B","N","M"].map((k,i) => (
-          <span key={i} className="teh-auth-key" style={{"--d": `${i * 0.18}s`}}>{k}</span>
+        {[
+          "A",
+          "S",
+          "D",
+          "F",
+          "J",
+          "K",
+          "L",
+          ";",
+          "Q",
+          "W",
+          "E",
+          "R",
+          "T",
+          "Y",
+          "U",
+          "I",
+          "O",
+          "P",
+          "Z",
+          "X",
+          "C",
+          "V",
+          "B",
+          "N",
+          "M",
+        ].map((k, i) => (
+          <span
+            key={i}
+            className="teh-auth-key"
+            style={{ "--d": `${i * 0.18}s` }}
+          >
+            {k}
+          </span>
         ))}
       </div>
     </div>

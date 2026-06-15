@@ -432,3 +432,55 @@
     display: none;
   }
 }
+/* Auth Avatar */
+.sk-auth-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--sk-accent), var(--sk-accent2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: white;
+}
+
+/* Dropdown email */
+.sk-drop-email {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--sk-text2);
+  margin-top: 2px;
+}
+
+/* Dropdown badge */
+.sk-drop-badge {
+  display: inline-block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background: rgba(124, 106, 247, 0.15);
+  color: var(--sk-accent);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* Logout button style */
+.sk-drop-logout {
+  color: var(--sk-red) !important;
+  border-top: 1px solid var(--sk-border);
+  margin-top: 4px;
+  padding-top: 8px;
+}
+
+.sk-drop-logout:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+  color: var(--sk-red) !important;
+}
+
+.sk-mob-logout {
+  color: var(--sk-red) !important;
+}

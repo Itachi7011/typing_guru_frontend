@@ -25,9 +25,13 @@ import {
   AlertTriangle,
   Flame,
   GraduationCap,
+  LogOut,
+  UserCircle,
+  History,
 } from "lucide-react";
 
 const LS_KEY = "tc_user_data";
+
 function lsGet(k) {
   try {
     return JSON.parse(localStorage.getItem(k));
@@ -36,14 +40,57 @@ function lsGet(k) {
   }
 }
 
+function lsRemove(k) {
+  try {
+    localStorage.removeItem(k);
+  } catch {}
+}
+
 export default function Navbar() {
   const { isDarkMode, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [userData] = useState(() => lsGet(LS_KEY));
+  const [userData, setUserData] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const navRef = useRef(null);
+
+  // Check authentication status on mount and when localStorage changes
+  useEffect(() => {
+    checkAuthStatus();
+
+    // Listen for storage changes (for cross-tab sync)
+    window.addEventListener("storage", checkAuthStatus);
+    return () => window.removeEventListener("storage", checkAuthStatus);
+  }, []);
+
+  const checkAuthStatus = () => {
+    // Check for logged-in user from localStorage (set during login)
+    const loggedInUser = localStorage.getItem("user");
+    const isLoggedInFlag = localStorage.getItem("isLoggedIn") === "true";
+
+    if (loggedInUser && isLoggedInFlag) {
+      try {
+        const user = JSON.parse(loggedInUser);
+        setUserData(user);
+        setIsLoggedIn(true);
+      } catch (e) {
+        setUserData(null);
+        setIsLoggedIn(false);
+      }
+    } else {
+      // Fallback to guest data
+      const guestData = lsGet(LS_KEY);
+      if (guestData?.guestId) {
+        setUserData(guestData);
+        setIsLoggedIn(false);
+      } else {
+        setUserData(null);
+        setIsLoggedIn(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -75,6 +122,53 @@ export default function Navbar() {
     });
   };
 
+  const handleLogout = async () => {
+    Swal.fire({
+      icon: "question",
+      title: "Logout?",
+      text: "Are you sure you want to logout?",
+      showCancelButton: true,
+      confirmButtonText: "Yes, logout",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#dc2626",
+      background: isDarkMode ? "#181b25" : "#fff",
+      color: isDarkMode ? "#e8eaf6" : "#1a1c2e",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          // Call logout API to clear cookies
+          await fetch("/api/user/auth/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch (err) {
+          console.error("Logout API error:", err);
+        } finally {
+          // Clear local storage
+          localStorage.removeItem("user");
+          localStorage.removeItem("isLoggedIn");
+          localStorage.removeItem("verificationStatus");
+
+          // Reset state
+          setUserData(null);
+          setIsLoggedIn(false);
+
+          Swal.fire({
+            icon: "success",
+            title: "Logged Out",
+            text: "You have been successfully logged out.",
+            timer: 1500,
+            showConfirmButton: false,
+            background: isDarkMode ? "#181b25" : "#fff",
+            color: isDarkMode ? "#e8eaf6" : "#1a1c2e",
+          });
+
+          navigate("/");
+        }
+      }
+    });
+  };
+
   const NAV_LINKS = [
     { label: "Home", path: "/", icon: Home },
     {
@@ -83,7 +177,6 @@ export default function Navbar() {
       dropdown: [
         { label: "Typing Test", path: "/", icon: Keyboard },
         { label: "Custom Drills", path: "/drills", icon: Brain },
-        // { label: "Code Typing", path: "/code", icon: BookOpen },
         { label: "Daily Challenge", path: "/daily", icon: Flame },
       ],
     },
@@ -92,22 +185,49 @@ export default function Navbar() {
       icon: BarChart2,
       dropdown: [
         { label: "Analytics", path: "/user/analytics", icon: BarChart2 },
-        // { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
-        // { label: "Achievements", path: "/achievements", icon: Star },
       ],
     },
     { label: "Languages", path: "/languages", icon: Globe },
     { label: "Govt Exams", path: "/exams", icon: GraduationCap },
   ];
 
-  const AUTH_MENU = [
-    { label: "Login", path: "/user/auth/login", icon: LogIn },
-    { label: "Sign Up", path: "/user/auth/signup", icon: UserPlus },
-    // { label: "Admin Login", icon: Shield, admin: true },
-    // { label: "Admin Signup", icon: Shield, admin: true },
-  ];
+  // Different menu for logged in vs logged out users
+  const getAuthMenu = () => {
+    if (isLoggedIn) {
+      return [
+        { label: "My Profile", path: "/user/profile", icon: UserCircle },
+        { label: "Analytics", path: "/user/analytics", icon: History },
+        // { label: "Settings", path: "/user/settings", icon: Settings },
+        { label: "Logout", action: handleLogout, icon: LogOut, isLogout: true },
+      ];
+    } else {
+      return [
+        { label: "Login", path: "/user/auth/login", icon: LogIn },
+        { label: "Sign Up", path: "/user/auth/signup", icon: UserPlus },
+      ];
+    }
+  };
 
-  const isLoggedIn = userData?.guestId || userData?.userId;
+  const getDisplayName = () => {
+    if (isLoggedIn && userData?.name) {
+      return userData.name.split(" ")[0]; // Show first name only
+    }
+    if (userData?.guestId) {
+      return "Guest";
+    }
+    return "Account";
+  };
+
+  const getInitials = () => {
+    if (isLoggedIn && userData?.name) {
+      const names = userData.name.split(" ");
+      if (names.length >= 2) {
+        return `${names[0][0]}${names[1][0]}`.toUpperCase();
+      }
+      return names[0][0].toUpperCase();
+    }
+    return "👤";
+  };
 
   return (
     <nav
@@ -182,43 +302,49 @@ export default function Navbar() {
           </button>
 
           {/* Auth dropdown */}
-         <div className="sk-nav-item">
+          <div className="sk-nav-item">
             <button
               className={`sk-auth-btn ${openDropdown === "auth" ? "sk-drop-open" : ""}`}
               onClick={() => toggleDrop("auth")}
             >
-              <User size={15} />
-              {isLoggedIn ? userData?.name || "Guest" : "Account"}
+              {isLoggedIn ? (
+                <span className="sk-auth-avatar">{getInitials()}</span>
+              ) : (
+                <User size={15} />
+              )}
+              {getDisplayName()}
               <ChevronDown size={13} className="sk-chev" />
             </button>
             {openDropdown === "auth" && (
               <div className="sk-dropdown sk-dropdown-right">
-                {isLoggedIn && (
+                {isLoggedIn && userData && (
                   <div className="sk-drop-user-info">
                     <span className="sk-drop-greeting">
-                      Hello, {userData?.name || "Guest"} 👋
+                      👋 Hello, {userData.name}
                     </span>
-                    {userData?.guestId && (
-                      <span className="sk-drop-guest-tag">Guest Mode</span>
+                    {userData.email && (
+                      <span className="sk-drop-email">{userData.email}</span>
+                    )}
+                    {userData.usertype === "User" && (
+                      <span className="sk-drop-badge">✨ Member</span>
                     )}
                   </div>
                 )}
-                {AUTH_MENU.map((a) => (
+                {getAuthMenu().map((item) => (
                   <button
-                    key={a.label}
-                    className={`sk-drop-item ${a.admin ? "sk-drop-admin" : ""}`}
+                    key={item.label}
+                    className={`sk-drop-item ${item.isLogout ? "sk-drop-logout" : ""}`}
                     onClick={() => {
-                      if (a.admin) {
-                        adminAlert();
-                      } else {
-                        navigate(a.path);
+                      if (item.action) {
+                        item.action();
+                      } else if (item.path) {
+                        navigate(item.path);
                       }
                       setOpenDropdown(null);
                     }}
                   >
-                    <a.icon size={14} />
-                    {a.label}
-                    {a.admin && <span className="sk-admin-tag">Admin</span>}
+                    <item.icon size={14} />
+                    {item.label}
                   </button>
                 ))}
               </div>
@@ -280,18 +406,21 @@ export default function Navbar() {
           </div>
         ))}
         <div className="sk-mob-divider" />
-        {AUTH_MENU.map((a) => (
+        {getAuthMenu().map((item) => (
           <button
-            key={a.label}
-            className={`sk-mob-link ${a.admin ? "sk-mob-admin" : ""}`}
+            key={item.label}
+            className={`sk-mob-link ${item.isLogout ? "sk-mob-logout" : ""}`}
             onClick={() => {
-              if (a.admin) adminAlert();
-              else navigate(a.path);
+              if (item.action) {
+                item.action();
+              } else if (item.path) {
+                navigate(item.path);
+              }
               setMobileOpen(false);
+              setOpenDropdown(null);
             }}
           >
-            <a.icon size={14} /> {a.label}
-            {a.admin && <span className="sk-admin-tag">Admin</span>}
+            <item.icon size={14} /> {item.label}
           </button>
         ))}
         <button className="sk-mob-link" onClick={toggleTheme}>

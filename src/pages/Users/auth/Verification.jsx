@@ -1,5 +1,5 @@
-import { useState, useContext } from "react";
-import { Link } from "react-router-dom";
+import { useState, useContext, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   Mail,
   Phone,
@@ -7,6 +7,8 @@ import {
   Send,
   ShieldCheck,
   ArrowRight,
+  Edit2,
+  User,
 } from "lucide-react";
 import Swal from "sweetalert2";
 import { ThemeContext } from "../../../context/ThemeContext";
@@ -19,6 +21,9 @@ function OtpModule({
   apiSend,
   apiVerify,
   isDarkMode,
+  userEmail,
+  userPhone,
+  onVerified,
 }) {
   const bg = isDarkMode ? "#0d1117" : "#fff";
   const col = isDarkMode ? "#e6edf3" : "#0d1117";
@@ -28,28 +33,47 @@ function OtpModule({
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualEmail, setManualEmail] = useState("");
+  const [manualPhone, setManualPhone] = useState("");
+
+  // Use props OR manual input - props take priority
+  const email = userEmail || manualEmail;
+  const phone = userPhone || manualPhone;
+
+  // Check if we have identifier from ANY source
+  const hasIdentifier =
+    id === "email"
+      ? email && email.trim() !== ""
+      : phone && phone.trim() !== "";
 
   const startTimer = () => {
     setTimer(60);
-    const t = setInterval(
-      () =>
-        setTimer((p) => {
-          if (p <= 1) {
-            clearInterval(t);
-            return 0;
-          }
-          return p - 1;
-        }),
-      1000,
-    );
+    const t = setInterval(() => {
+      setTimer((p) => {
+        if (p <= 1) {
+          clearInterval(t);
+          return 0;
+        }
+        return p - 1;
+      });
+    }, 1000);
   };
 
   const sendCode = async () => {
+    // Only show manual input if NO identifier exists
+    if (!hasIdentifier) {
+      setShowManualInput(true);
+      return;
+    }
+
     setLoading(true);
     try {
+      const body = id === "email" ? { email } : { phone };
       const res = await fetch(apiSend, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to send code");
@@ -84,10 +108,12 @@ function OtpModule({
     if (val && idx < 5)
       document.getElementById(`${id}-otp-${idx + 1}`)?.focus();
   };
+
   const handleKey = (e, idx) => {
     if (e.key === "Backspace" && !otp[idx] && idx > 0)
       document.getElementById(`${id}-otp-${idx - 1}`)?.focus();
   };
+
   const handlePaste = (e) => {
     const paste = e.clipboardData
       .getData("text")
@@ -100,23 +126,28 @@ function OtpModule({
   const verify = async (e) => {
     e.preventDefault();
     const code = otp.join("");
-    if (code.length < 6)
+    if (code.length < 6) {
       return Swal.fire({
         icon: "warning",
         title: "Enter complete code",
         background: bg,
         color: col,
       });
+    }
+
     setLoading(true);
     try {
+      const body = id === "email" ? { email, otp: code } : { phone, otp: code };
+
       const res = await fetch(apiVerify, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ otp: code }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Invalid code");
       setVerified(true);
+      if (onVerified) onVerified(id, true);
       Swal.fire({
         icon: "success",
         title: `${title} verified!`,
@@ -166,7 +197,8 @@ function OtpModule({
           <div className="teh-verify-mod-title">{title}</div>
           <div className="teh-verify-mod-sub">{hint}</div>
         </div>
-        {!sent && (
+        {/* Show send button only if we have identifier and not sent */}
+        {!sent && hasIdentifier && !showManualInput && (
           <button
             className="teh-verify-send-btn"
             onClick={sendCode}
@@ -183,6 +215,68 @@ function OtpModule({
         )}
       </div>
 
+      {/* Manual input - only shown when NO identifier exists */}
+      {showManualInput && !sent && (
+        <div className="teh-verify-input-group">
+          <label className="teh-auth-label">
+            {id === "email" ? "Email Address" : "Phone Number"}
+          </label>
+          <div className="teh-auth-input-wrap">
+            <input
+              type={id === "email" ? "email" : "tel"}
+              className="teh-auth-input"
+              placeholder={
+                id === "email" ? "you@example.com" : "+91 98765 43210"
+              }
+              value={id === "email" ? manualEmail : manualPhone}
+              onChange={(e) => {
+                if (id === "email") setManualEmail(e.target.value);
+                else setManualPhone(e.target.value);
+              }}
+              autoComplete={id === "email" ? "email" : "tel"}
+            />
+            {id === "email" ? <Mail size={15} /> : <Phone size={15} />}
+          </div>
+          <button
+            className="teh-verify-update-btn"
+            onClick={() => {
+              if (
+                (id === "email" && manualEmail) ||
+                (id === "phone" && manualPhone)
+              ) {
+                setShowManualInput(false);
+                sendCode();
+              } else {
+                Swal.fire({
+                  icon: "warning",
+                  title: id === "email" ? "Email Required" : "Phone Required",
+                  text: `Please enter your ${id === "email" ? "email address" : "phone number"}.`,
+                  background: bg,
+                  color: col,
+                });
+              }
+            }}
+          >
+            Submit & Send Code
+          </button>
+        </div>
+      )}
+
+      {/* Show existing identifier info - only when we have it and not in manual mode */}
+      {hasIdentifier && !sent && !showManualInput && (
+        <div className="teh-verify-info">
+          <User size={14} />
+          <span>{id === "email" ? email : phone}</span>
+          <button
+            className="teh-verify-edit-btn"
+            onClick={() => setShowManualInput(true)}
+          >
+            <Edit2 size={12} /> Change
+          </button>
+        </div>
+      )}
+
+      {/* OTP Form - shown after code sent */}
       {sent && (
         <form className="teh-verify-otp-form" onSubmit={verify} noValidate>
           <div className="teh-otp-row teh-otp-row-sm" onPaste={handlePaste}>
@@ -231,6 +325,54 @@ function OtpModule({
 
 export default function Verify() {
   const { isDarkMode } = useContext(ThemeContext);
+  const location = useLocation();
+
+  const [userData, setUserData] = useState({
+    email: "",
+    phone: "",
+    userId: null,
+  });
+
+  useEffect(() => {
+    // Get data from navigation state or localStorage
+    const stateData = location.state || {};
+    const storedUser = localStorage.getItem("pendingVerification");
+
+    let email = stateData.email || "";
+    let phone = stateData.phone || "";
+    let userId = stateData.userId || null;
+
+    if (storedUser && !email) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        email = parsed.email || "";
+        phone = parsed.phone || "";
+        userId = parsed.userId || null;
+      } catch (e) {
+        console.error("Failed to parse stored user:", e);
+      }
+    }
+
+    setUserData({ email, phone, userId });
+
+    // Clear stored data after loading
+    if (storedUser && email) {
+      localStorage.removeItem("pendingVerification");
+    }
+  }, [location]);
+
+  const handleVerification = (type, verified) => {
+    if (type === "email" && verified) {
+      const updated = { ...userData, emailVerified: true };
+      setUserData(updated);
+      localStorage.setItem("verificationStatus", JSON.stringify(updated));
+    }
+    if (type === "phone" && verified) {
+      const updated = { ...userData, phoneVerified: true };
+      setUserData(updated);
+      localStorage.setItem("verificationStatus", JSON.stringify(updated));
+    }
+  };
 
   return (
     <div className={`teh-auth-root ${isDarkMode ? "dark" : "light"}`}>
@@ -255,9 +397,11 @@ export default function Verify() {
             icon={Mail}
             title="Email Verification"
             hint="We'll send a 6-digit code to your registered email"
-            apiSend="/api/auth/send-email-otp"
-            apiVerify="/api/auth/verify-email"
+            apiSend="/api/user/auth/send-email-otp"
+            apiVerify="/api/user/auth/verify-email"
             isDarkMode={isDarkMode}
+            userEmail={userData.email}
+            onVerified={handleVerification}
           />
 
           <div className="teh-verify-divider">
@@ -269,14 +413,16 @@ export default function Verify() {
             icon={Phone}
             title="Phone Verification"
             hint="We'll send a 6-digit code via SMS"
-            apiSend="/api/auth/send-phone-otp"
-            apiVerify="/api/auth/verify-phone"
+            apiSend="/api/user/auth/send-phone-otp"
+            apiVerify="/api/user/auth/verify-phone"
             isDarkMode={isDarkMode}
+            userPhone={userData.phone}
+            onVerified={handleVerification}
           />
         </div>
 
         <div className="teh-verify-footer">
-          <Link to="/auth/login" className="teh-auth-link">
+          <Link to="/user/auth/login" className="teh-auth-link">
             <ArrowRight size={13} /> Continue to login
           </Link>
           <span className="teh-verify-skip">

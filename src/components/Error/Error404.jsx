@@ -1,119 +1,165 @@
-// components/errors/Error404Page.jsx
-import React, { useContext } from 'react';
-import { ThemeContext } from '../../context/ThemeContext';
-import { Home, RefreshCw, Search, AlertTriangle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
+import React, { useContext, useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { ThemeContext } from "../../context/ThemeContext";
+import {
+  Home,
+  ArrowLeft,
+  Keyboard,
+  RotateCcw,
+  Sun,
+  Moon,
+  Compass,
+} from "lucide-react";
 
-const Error404Page = () => {
-  const { isDarkMode } = useContext(ThemeContext);
+// Phrase that gets "mistyped" into the 404 message
+const TARGET = "this page doesn't exist";
+// What actually gets typed out (with intentional typo) before correcting
+const TYPED_SEQUENCE = "this paeg doesnt exist";
+
+export default function Error404() {
+  const { isDarkMode, toggleTheme } = useContext(ThemeContext);
   const navigate = useNavigate();
 
-  const handleGoHome = () => {
-    navigate('/');
-  };
+  const [typed, setTyped] = useState("");
+  const [errIndexes, setErrIndexes] = useState([]);
+  const [phase, setPhase] = useState("typing"); // typing | done
+  const timeoutRef = useRef(null);
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
+  useEffect(() => {
+    let i = 0;
+    const errorPositions = new Set([8, 9, 17, 18]); // "pa[eg]" + "doesn[t]" approx
 
-  const handleReportIssue = () => {
-    Swal.fire({
-      title: 'Report Missing Page',
-      text: 'Let us know what you were looking for',
-      input: 'text',
-      inputPlaceholder: 'Describe the page or feature you were trying to access...',
-      showCancelButton: true,
-      confirmButtonText: 'Send Report',
-      confirmButtonColor: '#667eea',
-      background: isDarkMode ? '#2d3748' : '#ffffff',
-      color: isDarkMode ? '#e2e8f0' : '#2d3748',
-    }).then((result) => {
-      if (result.isConfirmed) {
-        Swal.fire({
-          title: 'Thank You!',
-          text: 'We\'ve received your report and will look into it.',
-          icon: 'success',
-          confirmButtonColor: '#667eea',
-          background: isDarkMode ? '#2d3748' : '#ffffff',
-          color: isDarkMode ? '#e2e8f0' : '#2d3748',
-        });
+    function tick() {
+      if (i <= TYPED_SEQUENCE.length) {
+        setTyped(TYPED_SEQUENCE.slice(0, i));
+        if (errorPositions.has(i - 1)) {
+          setErrIndexes((prev) => [...prev, i - 1]);
+        }
+        i++;
+        timeoutRef.current = setTimeout(tick, i < 6 ? 90 : 55);
+      } else {
+        timeoutRef.current = setTimeout(() => setPhase("done"), 600);
       }
-    });
-  };
+    }
+    tick();
+    return () => clearTimeout(timeoutRef.current);
+  }, []);
 
   return (
-    <div className={`authnest-error-page-container ${isDarkMode ? 'dark' : 'light'}`}>
-      <div className="authnest-error-page-content">
-        <div className="authnest-error-page-text">
-          <h1 className="authnest-error-page-title">404</h1>
-          <h2 className="authnest-error-page-subtitle">Page Not Found</h2>
-          <p className="authnest-error-page-description">
-            Oops! The page you're looking for seems to have wandered off into the digital void. 
-            It might have been moved, deleted, or you may have entered an incorrect URL.
+    <div className={`sk-404-root ${isDarkMode ? "dark" : "light"}`}>
+      <button
+        className="sk-404-theme-btn"
+        onClick={toggleTheme}
+        aria-label="Toggle theme"
+      >
+        {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+      </button>
+
+      <div className="sk-404-bg-grid" aria-hidden="true" />
+
+      <main className="sk-404-main">
+        <div className="sk-404-content">
+          <div className="sk-404-eyebrow">
+            <Keyboard size={14} />
+            <span>SwiftKeys</span>
+          </div>
+
+          {/* Big 404 with typing caret styling */}
+          <div className="sk-404-code">
+            4<span className="sk-404-code-zero">0</span>4
+          </div>
+
+          {/* Live "typed" line with error highlighting like the typing test */}
+          <div className="sk-404-typeline" aria-live="polite">
+            <span className="sk-404-typeline-text">
+              {phase === "typing"
+                ? typed.split("").map((ch, idx) => (
+                    <span
+                      key={idx}
+                      className={
+                        errIndexes.includes(idx)
+                          ? "sk-404-ch-err"
+                          : "sk-404-ch-ok"
+                      }
+                    >
+                      {ch}
+                    </span>
+                  ))
+                : TARGET.split("").map((ch, idx) => (
+                    <span key={idx} className="sk-404-ch-ok">
+                      {ch}
+                    </span>
+                  ))}
+              <span className="sk-404-caret" />
+            </span>
+          </div>
+
+          <p className="sk-404-desc">
+            {phase === "done"
+              ? "The route you typed doesn't map to a page here. Let's get your fingers back on the home row."
+              : "Looks like a typo slipped through…"}
           </p>
 
-          <div className="authnest-error-page-details">
-            <h3 className="authnest-error-page-details-title">What could have happened?</h3>
-            <ul className="authnest-error-page-details-list">
-              <li className="authnest-error-page-details-item">
-                <Search size={18} />
-                The page may have been moved or renamed
-              </li>
-              <li className="authnest-error-page-details-item">
-                <AlertTriangle size={18} />
-                You might have typed the URL incorrectly
-              </li>
-              <li className="authnest-error-page-details-item">
-                <RefreshCw size={18} />
-                The page could be temporarily unavailable
-              </li>
-            </ul>
+          <div className="sk-404-actions">
+            <button
+              className="sk-404-btn sk-404-btn-primary"
+              onClick={() => navigate("/")}
+            >
+              <Home size={16} />
+              Back to Home
+            </button>
+            <button
+              className="sk-404-btn sk-404-btn-secondary"
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft size={16} />
+              Go Back
+            </button>
+            <button
+              className="sk-404-btn sk-404-btn-secondary"
+              onClick={() => window.location.reload()}
+            >
+              <RotateCcw size={16} />
+              Retry
+            </button>
           </div>
 
-          <div className="authnest-error-page-actions">
-            <button 
-              className="authnest-error-page-button authnest-error-page-button-primary"
-              onClick={handleGoHome}
-            >
-              <Home size={20} />
-              Go Home
-            </button>
-            <button 
-              className="authnest-error-page-button authnest-error-page-button-secondary"
-              onClick={handleRefresh}
-            >
-              <RefreshCw size={20} />
-              Refresh Page
-            </button>
-            <button 
-              className="authnest-error-page-button authnest-error-page-button-secondary"
-              onClick={handleReportIssue}
-            >
-              <AlertTriangle size={20} />
-              Report Issue
-            </button>
+          <div className="sk-404-suggest">
+            <Compass size={13} />
+            <span>
+              Try{" "}
+              <button
+                className="sk-404-link"
+                onClick={() => navigate("/drills")}
+              >
+                Drills
+              </button>
+              ,{" "}
+              <button
+                className="sk-404-link"
+                onClick={() => navigate("/daily-challenge")}
+              >
+                Daily Challenge
+              </button>{" "}
+              or{" "}
+              <button
+                className="sk-404-link"
+                onClick={() => navigate("/exam-practice")}
+              >
+                Exam Practice
+              </button>
+            </span>
           </div>
         </div>
 
-        <div className="authnest-error-page-visual">
-          <div className="authnest-error-page-floating-elements">
-            <div className="authnest-error-page-floating-element"></div>
-            <div className="authnest-error-page-floating-element"></div>
-            <div className="authnest-error-page-floating-element"></div>
-            <div className="authnest-error-page-cube">
-              <div className="authnest-error-page-face authnest-error-page-face-front">4</div>
-              <div className="authnest-error-page-face authnest-error-page-face-back">0</div>
-              <div className="authnest-error-page-face authnest-error-page-face-right">4</div>
-              <div className="authnest-error-page-face authnest-error-page-face-left">?</div>
-              <div className="authnest-error-page-face authnest-error-page-face-top">!</div>
-              <div className="authnest-error-page-face authnest-error-page-face-bottom">?</div>
-            </div>
-          </div>
+        {/* Decorative floating keys */}
+        <div className="sk-404-keys" aria-hidden="true">
+          <span className="sk-404-key sk-404-key-1">⌫</span>
+          <span className="sk-404-key sk-404-key-2">404</span>
+          <span className="sk-404-key sk-404-key-3">esc</span>
+          <span className="sk-404-key sk-404-key-4">?</span>
         </div>
-      </div>
+      </main>
     </div>
   );
-};
-
-export default Error404Page;
+}
