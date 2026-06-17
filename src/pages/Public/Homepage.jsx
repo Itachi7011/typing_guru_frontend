@@ -6,8 +6,10 @@ import React, {
   useContext,
   useMemo,
 } from "react";
+
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../context/ThemeContext";
+
 import {
   Zap,
   Target,
@@ -64,6 +66,8 @@ import {
   Dumbbell,
   CalendarDays,
 } from "lucide-react";
+
+import Swal from "sweetalert2";
 
 import {
   FB,
@@ -530,28 +534,203 @@ export default function TypingCoach() {
 
   const hasAutoCollapsedRef = useRef(false);
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authUserData, setAuthUserData] = useState(null);
+  const [dataSynced, setDataSynced] = useState(false);
+
   const [showGuestModal, setShowGuestModal] = useState(false);
+
   useEffect(() => {
-    const ex = lsGet(LS_KEY);
-    if (!ex) setShowGuestModal(true);
-  }, []);
+    const checkAuthAndLoadData = async () => {
+      try {
+        // First, check if user is logged in via cookie
+        const authCheckRes = await fetch("/api/user/profile/me", {
+          credentials: "include",
+        });
+
+        if (authCheckRes.ok) {
+          const authData = await authCheckRes.json();
+          if (authData.success && authData.user) {
+            // User is logged in - fetch full user data
+            setIsAuthenticated(true);
+            setAuthUserData(authData.user);
+
+            // Check for local storage data
+            const localData = lsGet(LS_KEY);
+
+            if (localData && localData.guestId && !dataSynced) {
+              // Ask user if they want to sync local data
+              const result = await Swal.fire({
+                icon: "question",
+                title: "Sync Local Data?",
+                html: `
+                <div style="text-align: left;">
+                  <p>We found local typing data from your guest sessions.</p>
+                  <ul style="margin: 10px 0;">
+                    <li>📊 ${localData.totalTests || 0} tests completed</li>
+                    <li>⚡ Best WPM: ${localData.bestWPM || 0}</li>
+                    <li>⭐ Level: ${localData.level || 1}</li>
+                  </ul>
+                  <p>Would you like to sync this data with your account?</p>
+                </div>
+              `,
+                showCancelButton: true,
+                confirmButtonText: "Yes, Sync Data",
+                cancelButtonText: "No, Keep Separate",
+                background: isDarkMode ? "#0d1117" : "#fff",
+                color: isDarkMode ? "#e6edf3" : "#0d1117",
+              });
+
+              if (result.isConfirmed) {
+                const syncRes = await fetch(
+                  "/api/user/profile/sync-user-data",
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    credentials: "include",
+                    body: JSON.stringify({ localData }),
+                  },
+                );
+
+                if (syncRes.ok) {
+                  setDataSynced(true);
+                  Swal.fire({
+                    icon: "success",
+                    title: "Data Synced!",
+                    text: "Your local data has been merged with your account.",
+                    timer: 2000,
+                    showConfirmButton: false,
+                    background: isDarkMode ? "#0d1117" : "#fff",
+                    color: isDarkMode ? "#e6edf3" : "#0d1117",
+                  });
+
+                  const clearLocal = await Swal.fire({
+                    icon: "info",
+                    title: "Clear Local Data?",
+                    text: "Do you want to clear the local storage data to avoid duplicates?",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, Clear",
+                    cancelButtonText: "Keep",
+                    background: isDarkMode ? "#0d1117" : "#fff",
+                    color: isDarkMode ? "#e6edf3" : "#0d1117",
+                  });
+
+                  if (clearLocal.isConfirmed) {
+                    localStorage.removeItem(LS_KEY);
+                  }
+                }
+              }
+            }
+
+            // Fetch complete user data from database
+            const userDataRes = await fetch("/api/user/profile/user-data", {
+              credentials: "include",
+            });
+
+            if (userDataRes.ok) {
+              const userDataJson = await userDataRes.json();
+              if (userDataJson.success && userDataJson.userData) {
+                // Use database user data
+                setUserData(userDataJson.userData);
+                setAuthLoading(false);
+                return;
+              }
+            }
+          }
+        }
+
+        // Not logged in - check guest data
+        const guestData = lsGet(LS_KEY);
+        if (guestData && guestData.guestId) {
+          setUserData(guestData);
+          setIsAuthenticated(false);
+          setShowGuestModal(false);
+          setAuthLoading(false);
+        } else {
+          // No guest data, show modal - but ONLY if not authenticated
+          setShowGuestModal(true);
+          setAuthLoading(false);
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        // Fallback to guest mode
+        const guestData = lsGet(LS_KEY);
+        if (guestData && guestData.guestId) {
+          setUserData(guestData);
+          setShowGuestModal(false);
+        } else {
+          setShowGuestModal(true);
+        }
+        setAuthLoading(false);
+      }
+    };
+
+    checkAuthAndLoadData();
+  }, [isDarkMode]); // Added isDarkMode dependency for Swal theme
+
   const handleGuest = () => {
     const g = {
       guestId: uid(),
       name: "Guest",
+      email: null,
+      phone: null,
+      usertype: "Guest",
       xp: 0,
       level: 1,
       points: 0,
-      badges: ["Newbie"],
+      badges: [
+        {
+          name: "Newbie",
+          earnedAt: new Date(),
+          description: "Joined as guest",
+        },
+      ],
       streak: { current: 0, longest: 0, lastDate: null },
       bestWPM: 0,
+      bestAccuracy: 0,
       totalTests: 0,
       totalWords: 0,
       totalTime: 0,
+      totalCharacters: 0,
+      totalErrors: 0,
       achievements: [],
-      weeklyGoal: { target: 7, done: 0 },
       testHistory: [],
-      errorPatterns: {},
+      stats: {
+        daily: [],
+        weekly: [],
+        monthly: [],
+        allTime: {
+          avgWpm: 0,
+          bestWpm: 0,
+          avgAccuracy: 0,
+          bestAccuracy: 0,
+          totalTests: 0,
+          totalTimeTyped: 0,
+          consistency: 0,
+        },
+      },
+      preferences: {
+        communication: {
+          dailyReminders: true,
+          challengeReminders: true,
+          productUpdates: false,
+          marketingEmails: false,
+        },
+        ui: {
+          theme: "auto",
+          soundEffects: true,
+          keyboardSound: false,
+          showLiveWpm: true,
+        },
+        typing: {
+          fontSize: 16,
+          fontFamily: "monospace",
+          showKeyboard: true,
+          highlightErrors: true,
+          practiceMode: "timed",
+        },
+      },
       createdAt: new Date().toISOString(),
     };
     lsSet(LS_KEY, g);
@@ -562,7 +741,7 @@ export default function TypingCoach() {
   const textDisplayRef = useRef(null);
   const [charsPerLine, setCharsPerLine] = useState(70);
   const [handVisualizerActive, setHandVisualizerActive] = useState(false);
-  
+
   // Page tab
   const [tab, setTab] = useState("test");
 
@@ -1167,6 +1346,7 @@ export default function TypingCoach() {
     if (wpmTickRef.current) clearInterval(wpmTickRef.current);
     timerRef.current = null;
     wpmTickRef.current = null;
+
     const fi = userInputRef.current,
       ft = testWordsRef.current,
       fs = startTimeRef.current;
@@ -1197,6 +1377,7 @@ export default function TypingCoach() {
     const focus = Math.round((acc / 100) * cons);
     const topFinger = Object.entries(ffe).sort((a, b) => b[1] - a[1])[0];
     const topPair = Object.entries(fpe).sort((a, b) => b[1] - a[1])[0];
+
     const res = {
       wpm: Math.max(0, wpm),
       rawWpm: Math.max(0, rawWpm),
@@ -1214,10 +1395,12 @@ export default function TypingCoach() {
       wordsTyped: Math.round(correct / 5),
       charsTyped: correct,
     };
+
     setTestDone(true);
     setTestRunning(false);
     setResults(res);
     setStartTime(null);
+
     const errKeys = Object.entries(fem)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
@@ -1232,7 +1415,11 @@ export default function TypingCoach() {
       ]),
     ].slice(0, 24);
     setDrills(drillWords);
+
+    // Call updateUser with the results
     updateUser(res);
+
+    // Also send to analytics API (optional)
     apiPost("/tests", {
       mode,
       language: lang,
@@ -1250,61 +1437,77 @@ export default function TypingCoach() {
   }
 
   function updateUser(res) {
-    setUserData((prev) => {
-      if (!prev) return prev;
-      const newXP = prev.xp + Math.round((res.wpm * res.accuracy) / 100);
-      const newLevel = Math.floor(newXP / 1000) + 1;
-      const newBest = Math.max(prev.bestWPM, res.wpm);
-      const today = new Date().toDateString(),
-        last = prev.streak?.lastDate;
-      let streak = { ...prev.streak };
-      if (last !== today) {
-        const diff = last
-          ? Math.round((new Date(today) - new Date(last)) / 864e5)
-          : 2;
-        streak.current = diff === 1 ? streak.current + 1 : 1;
-        streak.longest = Math.max(streak.longest, streak.current);
-        streak.lastDate = today;
-      }
-      const achs = [...(prev.achievements || [])];
-      ACHIEVEMENTS_DEF.forEach((a) => {
-        if (achs.includes(a.id)) return;
-        if (a.id === "first_test" && prev.totalTests === 0) achs.push(a.id);
-        if (a.id === "wpm_50" && res.wpm >= 50) achs.push(a.id);
-        if (a.id === "wpm_80" && res.wpm >= 80) achs.push(a.id);
-        if (a.id === "wpm_100" && res.wpm >= 100) achs.push(a.id);
-        if (a.id === "accuracy_95" && res.accuracy >= 95) achs.push(a.id);
-        if (a.id === "streak_7" && streak.current >= 7) achs.push(a.id);
-        if (a.id === "tests_10" && prev.totalTests + 1 >= 10) achs.push(a.id);
+    // For logged-in users - save to database
+    if (isAuthenticated) {
+      fetch("/api/user/profile/save-test-result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          wpm: res.wpm,
+          rawWpm: res.rawWpm,
+          accuracy: res.accuracy,
+          consistency: res.consistency,
+          mistakes: res.mistakes,
+          duration: res.elapsed,
+          mode: mode,
+          lang: lang,
+          wordsTyped: res.wordsTyped,
+          charsTyped: res.charsTyped,
+          difficulty: "medium",
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.success) {
+            // Update local state with fresh data from server
+            setUserData(data.user);
+            // Also update authUserData if needed
+            setAuthUserData(data.user);
+            console.log("✅ Test result saved to database");
+          }
+        })
+        .catch((error) => {
+          console.error("❌ Failed to save test result:", error);
+        });
+
+      // Also update local state immediately for UI responsiveness
+      setUserData((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          bestWPM: Math.max(prev.bestWPM || 0, res.wpm),
+          totalTests: (prev.totalTests || 0) + 1,
+          totalWords: (prev.totalWords || 0) + (res.wordsTyped || 0),
+          totalTime: (prev.totalTime || 0) + res.elapsed,
+        };
       });
-      const snap = {
-        date: new Date().toISOString(),
-        wpm: res.wpm,
-        accuracy: res.accuracy,
-        duration: res.elapsed,
-        mode,
-        lang,
-      };
-      return {
-        ...prev,
-        xp: newXP,
-        level: newLevel,
-        bestWPM: newBest,
-        totalTests: prev.totalTests + 1,
-        totalWords: prev.totalWords + res.wordsTyped,
-        totalTime: prev.totalTime + res.elapsed,
-        streak,
-        achievements: achs,
-        testHistory: [snap, ...(prev.testHistory || [])].slice(0, 100),
-        weeklyGoal: {
-          ...prev.weeklyGoal,
-          done: Math.min(
-            (prev.weeklyGoal?.done || 0) + 1,
-            prev.weeklyGoal?.target || 7,
-          ),
-        },
-      };
-    });
+    } else {
+      // For guest users - save to localStorage
+      setUserData((prev) => {
+        if (!prev) return prev;
+        const newData = {
+          ...prev,
+          bestWPM: Math.max(prev.bestWPM || 0, res.wpm),
+          totalTests: (prev.totalTests || 0) + 1,
+          totalWords: (prev.totalWords || 0) + (res.wordsTyped || 0),
+          totalTime: (prev.totalTime || 0) + res.elapsed,
+          testHistory: [
+            {
+              date: new Date().toISOString(),
+              wpm: res.wpm,
+              accuracy: res.accuracy,
+              duration: res.elapsed,
+              mode,
+              lang,
+            },
+            ...(prev.testHistory || []),
+          ].slice(0, 100),
+        };
+        lsSet(LS_KEY, newData);
+        return newData;
+      });
+    }
   }
 
   // When resetting test, optionally restore sidebar
@@ -1484,20 +1687,27 @@ export default function TypingCoach() {
     return () => ro.disconnect();
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     // Hand visualizer is active when:
     // 1. handVisualizerOn is true
     // 2. testRunning is true
     // 3. testDone is false
     // 4. user has started typing (userInput.length > 0)
-    const isActive = handVisualizerOn && testRunning && !testDone && userInput.length > 0;
-    
+    const isActive =
+      handVisualizerOn && testRunning && !testDone && userInput.length > 0;
+
     if (isActive && !handVisualizerActive) {
       setHandVisualizerActive(true);
     } else if (!isActive && handVisualizerActive) {
       setHandVisualizerActive(false);
     }
-  }, [handVisualizerOn, testRunning, testDone, userInput.length, handVisualizerActive]);
+  }, [
+    handVisualizerOn,
+    testRunning,
+    testDone,
+    userInput.length,
+    handVisualizerActive,
+  ]);
 
   const a11yCls = [
     a11y.dyslexia ? "tc-dyslexia" : "",
@@ -1519,6 +1729,37 @@ export default function TypingCoach() {
   const sanitizeText = (text) => {
     // Replace any whitespace sequence (newline, tab, multiple spaces) with a single space
     return text.replace(/\s+/g, " ").trim();
+  };
+
+  const getUserDisplayName = () => {
+    if (isAuthenticated && authUserData?.name) {
+      return authUserData.name;
+    }
+    if (userData?.name) {
+      return userData.name;
+    }
+    return "Guest";
+  };
+
+  const getUserLevel = () => {
+    if (isAuthenticated && authUserData?.level) {
+      return authUserData.level;
+    }
+    return userData?.level || 1;
+  };
+
+  const getUserXP = () => {
+    if (isAuthenticated && authUserData?.xp) {
+      return authUserData.xp;
+    }
+    return userData?.xp || 0;
+  };
+
+  const getUserStreak = () => {
+    if (isAuthenticated && authUserData?.streak?.current) {
+      return authUserData.streak.current;
+    }
+    return userData?.streak?.current || 0;
   };
 
   const renderedText = useMemo(() => {
@@ -1674,9 +1915,20 @@ export default function TypingCoach() {
   //   nextChar,
   // });
 
+  if (authLoading) {
+    return (
+      <div className={`tc-root ${isDarkMode ? "dark" : "light"}`}>
+        <div className="tc-loading-screen">
+          <div className="tc-loading-spinner"></div>
+          <p>Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`tc-root ${isDarkMode ? "dark" : "light"} ${a11yCls}`}>
-      {showGuestModal && (
+      {!isAuthenticated && showGuestModal && !userData?.guestId && (
         <GuestModal
           onGuest={handleGuest}
           onLogin={() => navigate("/user/auth/login")}
@@ -1720,10 +1972,7 @@ export default function TypingCoach() {
             <Dumbbell size={15} />
             <span>Drills</span>
           </button>
-          <button
-            className="tc-pb-btn"
-            onClick={() => navigate("/daily")}
-          >
+          <button className="tc-pb-btn" onClick={() => navigate("/daily")}>
             <CalendarDays size={15} />
             <span>Daily</span>
           </button>
@@ -1896,7 +2145,11 @@ export default function TypingCoach() {
         />
 
         {/* ── MAIN CONTENT ── */}
-        <main className={`tc-main ${handVisualizerActive ? 'hand-visualizer-active' : ''}`}>          {/* ══ TEST TAB ══ */}
+        <main
+          className={`tc-main ${handVisualizerActive ? "hand-visualizer-active" : ""}`}
+        >
+          {" "}
+          {/* ══ TEST TAB ══ */}
           {tab === "test" && (
             <div
               className={`tc-test-panel${handVisualizerOn && testRunning && !testDone ? " tc-test-centered" : ""}`}
@@ -2180,7 +2433,6 @@ export default function TypingCoach() {
               )}
             </div>
           )}
-
           {/* ══ ANALYTICS TAB ══ */}
           {tab === "analytics" && (
             <div className="tc-analytics-panel">
@@ -2365,7 +2617,6 @@ export default function TypingCoach() {
               </div>
             </div>
           )}
-
           {/* ══ COACH TAB ══ */}
           {tab === "coach" && (
             <div className="tc-coach-panel">
@@ -2472,7 +2723,6 @@ export default function TypingCoach() {
               )}
             </div>
           )}
-
           {/* ══ ACHIEVEMENTS TAB ══ */}
           {tab === "achievements" && (
             <div className="tc-ach-panel">
@@ -2536,7 +2786,6 @@ export default function TypingCoach() {
               </div>
             </div>
           )}
-
           {/* ══ LEADERBOARD TAB ══ */}
           {tab === "leaderboard" && (
             <div className="tc-lb-panel">
