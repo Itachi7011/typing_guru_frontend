@@ -1897,7 +1897,7 @@ export default function ExamPractice() {
                     </span>
                     <span className="tg-ep-hide-xs">
                       {new Date(h.date).toLocaleDateString()}
-                    </span>
+                    </span> 
                   </div>
                 ))}
               </div>

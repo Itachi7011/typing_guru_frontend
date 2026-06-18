@@ -775,10 +775,10 @@ export default function Drill() {
     const renderedChars = [];
     let globalIndex = offset;
     visibleLines.forEach((line, lineIdx) => {
-      if (line.length === 0) {
-        renderedChars.push(
-          <div key={`empty-line-${lineIdx}`} className="dr-empty-line">
-            <span className="dr-placeholder-dots">~</span>
+      if (line.length === 0) { 
+        renderedChars.push( 
+          <div key={`empty-line-${lineIdx}`} className="dr-empty-line"> 
+            <span className="dr-placeholder-dots">~</span> 
           </div>,
         );
       } else {
