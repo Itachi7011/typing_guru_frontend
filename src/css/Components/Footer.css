@@ -13,7 +13,8 @@
   --sf-text2: #8b90a4;
   --sf-accent: #7c6af7;
   --sf-accent2: #5eead4;
-}
+}  
+
 .skg-footer.light {
   --sf-bg: #1a1c2e;
   --sf-bg2: #11131a;
@@ -23,6 +24,8 @@
   --sf-accent: #7c6af7;
   --sf-accent2: #5eead4;
 }
+
+
 
 .skg-footer {
   background: var(--sf-bg);
