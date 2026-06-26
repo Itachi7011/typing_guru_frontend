@@ -1,5 +1,5 @@
 // context/AuthContext.jsx
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect } from "react";
 
 const AuthContext = createContext();
 
@@ -17,9 +17,9 @@ export const AuthProvider = ({ children }) => {
         if (storedUser) {
           // Verify token with backend
           const res = await fetch("/api/user/auth/me", {
-            credentials: 'include'
+            credentials: "include",
           });
-          
+
           if (res.ok) {
             const data = await res.json();
             setUser(data.user);
@@ -35,7 +35,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     };
-    
+
     checkAuth();
   }, []);
 
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await fetch("/api/user/auth/logout", {
         method: "POST",
-        credentials: 'include'
+        credentials: "include",
       });
     } catch (error) {
       console.error("Logout error:", error);

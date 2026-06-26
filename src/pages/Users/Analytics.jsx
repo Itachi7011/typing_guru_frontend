@@ -83,11 +83,7 @@ const INSIGHT_ICONS = {
 function ChartTooltip({ x, y, visible, children }) {
   if (!visible) return null;
   return (
-    <div
-      className="an2-tooltip"
-      style={{ left: x, top: y }}
-      role="tooltip"
-    >
+    <div className="an2-tooltip" style={{ left: x, top: y }} role="tooltip">
       {children}
     </div>
   );
@@ -96,9 +92,20 @@ function ChartTooltip({ x, y, visible, children }) {
 /* ════════════════════════════════════════════════════════════
    MINI LINE / AREA CHART (existing, with tooltip support)
    ════════════════════════════════════════════════════════════ */
-const MiniLine = ({ data = [], color = "var(--an2-accent)", h = 100, unit = "" }) => {
+const MiniLine = ({
+  data = [],
+  color = "var(--an2-accent)",
+  h = 100,
+  unit = "",
+}) => {
   const wrapRef = useRef(null);
-  const [tip, setTip] = useState({ visible: false, x: 0, y: 0, val: null, idx: null });
+  const [tip, setTip] = useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    val: null,
+    idx: null,
+  });
 
   if (!data.length) return <div className="an2-empty">No data yet</div>;
   const W = 400,
@@ -208,9 +215,7 @@ const BarChartViz = ({ data = [], color = "var(--an2-accent)" }) => {
           onMouseLeave={() => setHoverIdx(null)}
           onTouchStart={() => setHoverIdx(i)}
         >
-          {hoverIdx === i && (
-            <div className="an2-bar-tip">{d.value}</div>
-          )}
+          {hoverIdx === i && <div className="an2-bar-tip">{d.value}</div>}
           <div className="an2-bar-track">
             <div
               className="an2-bar-fill"
@@ -340,8 +345,7 @@ const RadarChart = ({ data = [], size = 260, color = "var(--an2-accent)" }) => {
 
   const ringLevels = [25, 50, 75, 100];
   const dataPoints = data.map((d, i) => pointAt(i, d.value));
-  const dataPath =
-    dataPoints.map((p) => `${p.x},${p.y}`).join(" ");
+  const dataPath = dataPoints.map((p) => `${p.x},${p.y}`).join(" ");
 
   return (
     <div className="an2-radar-wrap">
@@ -447,7 +451,13 @@ const ScatterPlot = ({ data = [], color = "var(--an2-accent)" }) => {
     <div className="an2-scatter-wrap">
       <svg viewBox={`0 0 ${W} ${H}`} className="an2-scatter-svg">
         {/* axes */}
-        <line x1={P} y1={H - P} x2={W - 10} y2={H - P} className="an2-scatter-axis" />
+        <line
+          x1={P}
+          y1={H - P}
+          x2={W - 10}
+          y2={H - P}
+          className="an2-scatter-axis"
+        />
         <line x1={P} y1={10} x2={P} y2={H - P} className="an2-scatter-axis" />
         {/* gridlines for accuracy at 80/90/100 */}
         {[80, 90, 100].map((v) => (
@@ -474,7 +484,12 @@ const ScatterPlot = ({ data = [], color = "var(--an2-accent)" }) => {
             style={{ cursor: "pointer" }}
           />
         ))}
-        <text x={W / 2} y={H - 4} textAnchor="middle" className="an2-scatter-axis-label">
+        <text
+          x={W / 2}
+          y={H - 4}
+          textAnchor="middle"
+          className="an2-scatter-axis-label"
+        >
           WPM →
         </text>
         <text
@@ -538,8 +553,9 @@ const HeatmapCalendar = ({ data = [] }) => {
                 className={`an2-heatmap-cell an2-heat-${levelFor(d.count)}`}
                 onMouseEnter={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
-                  const parentRect =
-                    e.currentTarget.closest(".an2-heatmap-wrap").getBoundingClientRect();
+                  const parentRect = e.currentTarget
+                    .closest(".an2-heatmap-wrap")
+                    .getBoundingClientRect();
                   setTip({
                     x: rect.left - parentRect.left + rect.width / 2,
                     y: rect.top - parentRect.top - 8,
@@ -550,8 +566,9 @@ const HeatmapCalendar = ({ data = [] }) => {
                 onMouseLeave={() => setTip(null)}
                 onTouchStart={(e) => {
                   const rect = e.currentTarget.getBoundingClientRect();
-                  const parentRect =
-                    e.currentTarget.closest(".an2-heatmap-wrap").getBoundingClientRect();
+                  const parentRect = e.currentTarget
+                    .closest(".an2-heatmap-wrap")
+                    .getBoundingClientRect();
                   setTip({
                     x: rect.left - parentRect.left + rect.width / 2,
                     y: rect.top - parentRect.top - 8,
@@ -565,10 +582,7 @@ const HeatmapCalendar = ({ data = [] }) => {
         ))}
       </div>
       {tip && (
-        <div
-          className="an2-heatmap-tip"
-          style={{ left: tip.x, top: tip.y }}
-        >
+        <div className="an2-heatmap-tip" style={{ left: tip.x, top: tip.y }}>
           <strong>{tip.count}</strong> test{tip.count === 1 ? "" : "s"} on{" "}
           {new Date(tip.date).toLocaleDateString("en-US", {
             month: "short",
@@ -668,7 +682,11 @@ function MilestoneModal({ milestone, onClose }) {
         role="dialog"
         aria-modal="true"
       >
-        <button className="an2-modal-close" onClick={onClose} aria-label="Close">
+        <button
+          className="an2-modal-close"
+          onClick={onClose}
+          aria-label="Close"
+        >
           <X size={16} />
         </button>
         <div className="an2-modal-icon-wrap">
@@ -693,7 +711,9 @@ function MilestoneModal({ milestone, onClose }) {
    ════════════════════════════════════════════════════════════ */
 function LoginPrompt({ isDarkMode, toggleTheme, navigate }) {
   return (
-    <div className={`an2-root an2-empty-state-root ${isDarkMode ? "dark" : "light"}`}>
+    <div
+      className={`an2-root an2-empty-state-root ${isDarkMode ? "dark" : "light"}`}
+    >
       <button className="an2-icon-btn an2-floating-theme" onClick={toggleTheme}>
         {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
       </button>
@@ -703,8 +723,8 @@ function LoginPrompt({ isDarkMode, toggleTheme, navigate }) {
         </div>
         <h2 className="an2-login-title">No analytics yet</h2>
         <p className="an2-login-desc">
-          Log in to sync your progress across devices, or just start typing
-          as a guest — your stats will appear here automatically.
+          Log in to sync your progress across devices, or just start typing as a
+          guest — your stats will appear here automatically.
         </p>
         <div className="an2-login-actions">
           <button
@@ -713,10 +733,7 @@ function LoginPrompt({ isDarkMode, toggleTheme, navigate }) {
           >
             <LogIn size={15} /> Log In
           </button>
-          <button
-            className="an2-btn an2-btn-sec"
-            onClick={() => navigate("/")}
-          >
+          <button className="an2-btn an2-btn-sec" onClick={() => navigate("/")}>
             <UserPlus size={15} /> Start Typing
           </button>
         </div>
@@ -896,7 +913,10 @@ export default function Analytics() {
     const streak = localUserData.streak?.current || 0;
     const totalTime = localUserData.totalTime || 0;
     return [
-      { axis: "Speed", value: Math.min(100, Math.round((bestWpm / 120) * 100)) },
+      {
+        axis: "Speed",
+        value: Math.min(100, Math.round((bestWpm / 120) * 100)),
+      },
       { axis: "Accuracy", value: Math.min(100, Math.round(bestAcc)) },
       {
         axis: "Consistency",
@@ -1063,7 +1083,8 @@ export default function Analytics() {
       : SKILL_TREE_DEF.map((s) => ({
           ...s,
           unlocked: vm.xp >= s.xpReq,
-          progress: vm.xp >= s.xpReq ? 100 : Math.min((vm.xp / s.xpReq) * 100, 100),
+          progress:
+            vm.xp >= s.xpReq ? 100 : Math.min((vm.xp / s.xpReq) * 100, 100),
         }));
 
   /* ── Local insights (built client-side, mirrors backend logic) ── */
@@ -1161,7 +1182,10 @@ export default function Analytics() {
           <div className="an2-nav-title">
             <BarChart2 size={18} /> Analytics
             {dataSource === "local" && (
-              <span className="an2-source-chip" title="Showing data saved on this device">
+              <span
+                className="an2-source-chip"
+                title="Showing data saved on this device"
+              >
                 Guest
               </span>
             )}
@@ -1209,8 +1233,8 @@ export default function Analytics() {
             {vm.plateauDetected && (
               <div className="an2-alert an2-alert-warn">
                 <AlertCircle size={15} />
-                Plateau detected — your WPM has been consistent. Try a new
-                mode to break through!
+                Plateau detected — your WPM has been consistent. Try a new mode
+                to break through!
               </div>
             )}
 
@@ -1279,7 +1303,11 @@ export default function Analytics() {
                   <Activity size={14} /> Key Metrics
                 </div>
                 <div className="an2-rings-row">
-                  <Ring value={vm.avgAcc} label="Accuracy" color="var(--an2-green)" />
+                  <Ring
+                    value={vm.avgAcc}
+                    label="Accuracy"
+                    color="var(--an2-green)"
+                  />
                   <Ring
                     value={Math.min(vm.bestWPM, 150)}
                     max={150}
@@ -1402,8 +1430,8 @@ export default function Analytics() {
                 </div>
                 <ScatterPlot data={vm.scatter} />
                 <p className="an2-chart-hint">
-                  Each dot is one test. Dots higher and further right show
-                  both fast and accurate typing — your sweet spot.
+                  Each dot is one test. Dots higher and further right show both
+                  fast and accurate typing — your sweet spot.
                 </p>
               </div>
             )}
@@ -1514,7 +1542,8 @@ export default function Analytics() {
                             className="an2-dist-fill"
                             style={{
                               width: `${d.pct}%`,
-                              background: DONUT_COLORS[(i + 2) % DONUT_COLORS.length],
+                              background:
+                                DONUT_COLORS[(i + 2) % DONUT_COLORS.length],
                             }}
                           />
                         </div>
@@ -1557,7 +1586,10 @@ export default function Analytics() {
                 {localInsights.map((ins, i) => {
                   const Icon = INSIGHT_ICONS[ins.icon] || Info;
                   return (
-                    <div key={i} className={`an2-insight an2-insight-${ins.type}`}>
+                    <div
+                      key={i}
+                      className={`an2-insight an2-insight-${ins.type}`}
+                    >
                       <Icon size={14} />
                       <span>{ins.text}</span>
                     </div>
@@ -1583,8 +1615,7 @@ export default function Analytics() {
                   <HeatmapCalendar data={heatmapData} />
                 ) : (
                   <div className="an2-empty">
-                    <Loader2 size={16} className="an2-spin" /> Loading
-                    activity…
+                    <Loader2 size={16} className="an2-spin" /> Loading activity…
                   </div>
                 )
               ) : (
@@ -1671,8 +1702,7 @@ export default function Analytics() {
               <>
                 {historyLoading && !historyItems.length ? (
                   <div className="an2-empty">
-                    <Loader2 size={16} className="an2-spin" /> Loading
-                    history…
+                    <Loader2 size={16} className="an2-spin" /> Loading history…
                   </div>
                 ) : !historyItems.length ? (
                   <div className="an2-empty-big">
@@ -1681,12 +1711,17 @@ export default function Analytics() {
                   </div>
                 ) : (
                   <>
-                    <HistoryTable items={historyItems} startIndexOffset={(historyPage - 1) * 20} />
+                    <HistoryTable
+                      items={historyItems}
+                      startIndexOffset={(historyPage - 1) * 20}
+                    />
                     <div className="an2-pagination">
                       <button
                         className="an2-page-btn"
                         disabled={historyPage <= 1}
-                        onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                        onClick={() =>
+                          setHistoryPage((p) => Math.max(1, p - 1))
+                        }
                       >
                         Prev
                       </button>
@@ -1697,7 +1732,9 @@ export default function Analytics() {
                         className="an2-page-btn"
                         disabled={historyPage >= historyTotalPages}
                         onClick={() =>
-                          setHistoryPage((p) => Math.min(historyTotalPages, p + 1))
+                          setHistoryPage((p) =>
+                            Math.min(historyTotalPages, p + 1),
+                          )
                         }
                       >
                         Next
@@ -1708,11 +1745,14 @@ export default function Analytics() {
               </>
             ) : !vm.history?.length ? (
               <div className="an2-empty-big">
-                No tests recorded yet. Head to the typing test to get
-                started!
+                No tests recorded yet. Head to the typing test to get started!
               </div>
             ) : (
-              <HistoryTable items={vm.history} startIndexOffset={0} reverseNum />
+              <HistoryTable
+                items={vm.history}
+                startIndexOffset={0}
+                reverseNum
+              />
             )}
           </div>
         )}

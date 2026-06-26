@@ -1024,10 +1024,10 @@ export default function DailyChallenge() {
       {handVisualizerOn && phase === "test" && testRunning && !testDone && (
         <HandVisualizer
           nextChar={nextChar}
-          isDarkMode={isDarkMode} 
-          visible={true} 
-        /> 
-      )} 
-    </div> 
-  ); 
+          isDarkMode={isDarkMode}
+          visible={true}
+        />
+      )}
+    </div>
+  );
 }
