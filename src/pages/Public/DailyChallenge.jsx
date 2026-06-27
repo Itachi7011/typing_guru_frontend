@@ -1027,7 +1027,7 @@ export default function DailyChallenge() {
           isDarkMode={isDarkMode}
           visible={true}
         />
-      )}
-    </div>
+      )} 
+    </div> 
   );
 }

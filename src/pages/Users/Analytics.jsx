@@ -47,14 +47,14 @@ import {
 } from "lucide-react";
 import { lsGet, LS_KEY, calcAccuracy } from "../../components/Fallback";
 
-/* ════════════════════════════════════════════════════════════
+/* ════════════════════════════════════════════════════════════ 
    CONSTANTS
-   ════════════════════════════════════════════════════════════ */
+   ════════════════════════════════════════════════════════════ */ 
 
-const SKILL_TREE_DEF = [
+const SKILL_TREE_DEF = [ 
   { id: "homerow", name: "Home Row", xpReq: 0 },
   { id: "allrows", name: "All Rows", xpReq: 500 },
-  { id: "speed50", name: "Speed 50 WPM", xpReq: 1000 },
+  { id: "speed50", name: "Speed 50 WPM", xpReq: 1000 }, 
   { id: "speed80", name: "Speed 80 WPM", xpReq: 2500 },
   { id: "accuracy", name: "Accuracy Pro", xpReq: 3000 },
   { id: "code", name: "Code Typing", xpReq: 5000 },

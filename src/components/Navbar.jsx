@@ -198,8 +198,8 @@ export default function Navbar() {
         { label: "My Profile", path: "/user/profile", icon: UserCircle },
         { label: "Analytics", path: "/user/analytics", icon: History },
         // { label: "Settings", path: "/user/settings", icon: Settings },
-        { label: "Logout", action: handleLogout, icon: LogOut, isLogout: true }, 
-      ]; 
+        { label: "Logout", action: handleLogout, icon: LogOut, isLogout: true },
+      ];
     } else {
       return [
         { label: "Login", path: "/user/auth/login", icon: LogIn },
