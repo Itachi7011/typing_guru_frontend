@@ -11,6 +11,8 @@ import "./css/Public/ExamPractice.css";
 import "./css/Public/Home_Sidebar.css";
 import "./css/Public/Drill.css";
 import "./css/Public/DailyChallenge.css";
+import "./css/Public/Typinggameshub.css";
+import "./css/Public/Typinggamesplay.css";
 
 import "./css/Users/Auth.css";
 import "./css/Users/Profile.css";
@@ -41,6 +43,8 @@ import Verification from "./pages/Users/auth/Verification";
 import Profile from "./pages/Users/Profile";
 import Analytics from "./pages/Users/Analytics";
 
+import AnaTypinggameshubytics from "./pages/Public/Games/Typinggameshub";
+
 import Error404 from './components/Error/Error404';
 
 function App() {
@@ -69,6 +73,8 @@ function App() {
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/languages" element={<LanguagesDescription />} />
             <Route path="/exams" element={<ExamPractice />} />
+
+            <Route path="/games" element={<AnaTypinggameshubytics />} />
 
             <Route path="/user/auth/signup" element={<Signup />} />
             <Route path="/user/auth/login" element={<Login />} />

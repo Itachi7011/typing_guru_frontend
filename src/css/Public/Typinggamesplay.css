@@ -1,0 +1,126 @@
+/* ============================================================================
+   TypingGamesPlay.css
+   ----------------------------------------------------------------------------
+   Layout/visuals specific to each of the four games. Shared HUD/overlay/
+   avatar/beacon styles live in TypingGamesHub.css — this file only covers
+   what makes Word Muncher look different from Falling Feast, etc.
+   ========================================================================== */
+
+/* ============================================================================
+   Word Muncher
+   ========================================================================== */
+.skg-muncher-pressure {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.75rem; color: var(--skg-text-muted);
+}
+.skg-pressure-track {
+  flex: 1; height: 8px; border-radius: 999px; background: var(--skg-surface-alt);
+  border: 1px solid var(--skg-border); overflow: hidden;
+}
+.skg-pressure-fill {
+  height: 100%; background: linear-gradient(90deg, var(--skg-violet), var(--skg-coral));
+  transition: width 0.25s ease;
+}
+
+.skg-muncher-lane {
+  flex: 1; display: flex; align-items: center; gap: 1.2rem; flex-wrap: wrap;
+  background: var(--skg-surface); border: 1px solid var(--skg-border);
+  border-radius: var(--skg-radius); padding: 1.6rem 1.4rem; position: relative;
+}
+.skg-muncher-pellets { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.skg-pellet {
+  font-family: var(--skg-font-mono); font-size: 1.4rem; font-weight: 700;
+  width: 2.2rem; height: 2.2rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--skg-surface-alt); border: 1px solid var(--skg-border);
+  color: var(--skg-text-muted); transition: all 0.15s ease;
+}
+.skg-pellet-eaten { opacity: 0.25; background: transparent; border-color: transparent; transform: scale(0.6); }
+.skg-pellet-next { color: var(--skg-cyan); border-color: var(--skg-cyan); box-shadow: 0 0 0 3px color-mix(in srgb, var(--skg-cyan) 25%, transparent); }
+
+.skg-muncher-queue { display: flex; gap: 0.6rem; flex-wrap: wrap; padding: 0 0.3rem; }
+.skg-queue-chip {
+  font-family: var(--skg-font-mono); font-size: 0.85rem; color: var(--skg-text-muted);
+  background: var(--skg-surface-alt); border: 1px solid var(--skg-border);
+  border-radius: 999px; padding: 0.3rem 0.8rem;
+}
+
+/* ============================================================================
+   Falling Feast
+   ========================================================================== */
+.skg-falling-sky {
+  flex: 1; position: relative; min-height: 50vh;
+  background: linear-gradient(180deg, var(--skg-surface) 0%, var(--skg-surface-alt) 100%);
+  border: 1px solid var(--skg-border); border-radius: var(--skg-radius); overflow: hidden;
+}
+.skg-falling-word {
+  position: absolute; transform: translate(-50%, 0); transition: top 0.06s linear;
+  font-family: var(--skg-font-mono); font-size: 1.05rem; font-weight: 700;
+  background: var(--skg-surface); border: 1px solid var(--skg-border);
+  border-radius: 8px; padding: 0.3rem 0.6rem; white-space: nowrap;
+}
+.skg-falling-active { border-color: var(--skg-cyan); box-shadow: 0 0 0 3px color-mix(in srgb, var(--skg-cyan) 20%, transparent); }
+.skg-falling-floor {
+  position: absolute; bottom: 0.8rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* ============================================================================
+   Bubble Buffet
+   ========================================================================== */
+.skg-bubble-tank {
+  flex: 1; position: relative; min-height: 50vh;
+  background: radial-gradient(circle at 50% 100%, color-mix(in srgb, var(--skg-violet) 14%, transparent), var(--skg-surface) 70%);
+  border: 1px solid var(--skg-border); border-radius: var(--skg-radius); overflow: hidden;
+}
+.skg-bubble-pod {
+  position: absolute; transform: translate(-50%, 0); transition: bottom 0.06s linear;
+  font-family: var(--skg-font-mono); font-size: 1rem; font-weight: 700;
+  background: var(--skg-surface); border: 2px solid var(--skg-border);
+  border-radius: 999px; padding: 0.45rem 0.9rem; white-space: nowrap;
+  animation: skg-bubble-sway 2.6s ease-in-out infinite;
+}
+@keyframes skg-bubble-sway {
+  0%, 100% { margin-left: -6px; }
+  50% { margin-left: 6px; }
+}
+.skg-bubble-active { border-color: var(--skg-violet); box-shadow: 0 0 0 3px color-mix(in srgb, var(--skg-violet) 22%, transparent); }
+.skg-bubble-avatar-dock {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* ============================================================================
+   Runner Rush
+   ========================================================================== */
+.skg-runner-track {
+  --skg-track-speed: 2.2s;
+  flex: 1; position: relative; min-height: 50vh; overflow: hidden;
+  background: linear-gradient(180deg, var(--skg-surface) 0%, var(--skg-surface-alt) 75%);
+  border: 1px solid var(--skg-border); border-radius: var(--skg-radius);
+}
+.skg-runner-ground {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 14%;
+  background-image: repeating-linear-gradient(
+    90deg, var(--skg-border) 0 28px, transparent 28px 64px
+  );
+  background-size: 64px 100%;
+  border-top: 2px solid var(--skg-border);
+  animation: skg-ground-scroll var(--skg-track-speed) linear infinite;
+}
+@keyframes skg-ground-scroll { from { background-position-x: 0; } to { background-position-x: -64px; } }
+.skg-runner-avatar-spot {
+  position: absolute; left: 6%; bottom: 12%; display: flex; flex-direction: column; align-items: center;
+}
+.skg-runner-word {
+  position: absolute; transform: translate(-50%, -50%); transition: left 0.06s linear;
+  font-family: var(--skg-font-mono); font-size: 1rem; font-weight: 700;
+  background: var(--skg-surface); border: 1px solid var(--skg-border);
+  border-radius: 8px; padding: 0.3rem 0.6rem; white-space: nowrap;
+}
+.skg-runner-active { border-color: var(--skg-coral); box-shadow: 0 0 0 3px color-mix(in srgb, var(--skg-coral) 20%, transparent); }
+
+@media (max-width: 720px) {
+  .skg-muncher-lane { padding: 1.1rem; gap: 0.8rem; }
+  .skg-pellet { width: 1.8rem; height: 1.8rem; font-size: 1.1rem; }
+}
