@@ -1,21 +1,13 @@
 // ============================================================================
-// TypingGamesHub.jsx
-// ----------------------------------------------------------------------------
-// "SwiftKeys Arcade" — the games landing page. Handles the same
-// login-or-guest flow as the Typing Test page, loads avatars/sound packs/
-// game list from the API with static fallbacks, renders the customization
-// rail, and swaps in whichever game the player picked.
-//
-// ADDING A NEW GAME LATER:
-//   1. Add its metadata (name, tagline, icon, accent colour) to GAME_DEFS
-//      in gamesFallback.js.
-//   2. Build the component (anything shaped like the existing four works —
-//      reuse useTypingGameEngine + useSpawnerGame where it fits).
-//   3. Import it below and add one line to GAME_COMPONENTS.
-// That's the entire integration surface — settings, persistence, the guest/
-// auth flow and the game grid all pick it up automatically.
+// TypingGamesHub.jsx  —  SwiftKeys Arcade v2
 // ============================================================================
-import React, { useState, useEffect, useContext, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useCallback,
+  useMemo,
+} from "react";
 import { useNavigate } from "react-router-dom";
 import { ThemeContext } from "../../../context/ThemeContext";
 import Swal from "sweetalert2";
@@ -34,9 +26,34 @@ import {
   LogIn,
   ChevronDown,
   Palette,
+  Car,
+  Zap,
+  Trophy,
+  Star,
+  ChevronRight,
+  Flame,
+  TrendingUp,
+  Target,
+  Crown,
+  Lock,
+  Search,
+  Shield,
+  Heart,
+  Brain,
+  Coffee,
+  Swords,
 } from "lucide-react";
 
-import { LS_KEY, lsGet, lsSet, uid, apiGet, apiPost } from "../../../components/Fallback";
+import {
+  LS_KEY,
+  lsGet,
+  lsSet,
+  uid,
+  apiGet,
+  apiPost,
+} from "../../../components/Fallback";
+
+import GameAvatar from "../../../components/Games/Gameavatar";
 
 import {
   GAME_API_ROUTES,
@@ -49,61 +66,174 @@ import {
   AVATAR_COLOR_SWATCHES,
 } from "../../../components/Games/Gamefallback";
 
+// --- Existing games ---
 import WordMuncherGame from "./Wordmunchergame";
 import FallingFeastGame from "./Fallingfeastgame";
 import BubbleBuffetGame from "./Bubblebuffetgame";
 import RunnerRushGame from "./Runnerrushgame";
-import GameAvatar from "../../../components/Games/Gameavatar";
+import TypeRacerGame from "./Typeracergame";
+import WordInvasionGame from "./Wordinvasiongame";
 
+// --- NEW games ---
+import TypingDetectiveGame from "./Typingdetectivegame";
+import TypingWizardDuelGame from "./Typingwizardduelgame";
+import ZombieSurvivalGame from "./Zombiesurvivalgame";
+import TypingRestaurantGame from "./Typingrestaurantgame";
 
 const GAME_COMPONENTS = {
   "word-muncher": WordMuncherGame,
   "falling-feast": FallingFeastGame,
   "bubble-buffet": BubbleBuffetGame,
   "runner-rush": RunnerRushGame,
+  "type-racer": TypeRacerGame,
+  "word-invasion": WordInvasionGame,
+  "typing-detective": TypingDetectiveGame,
+  "typing-wizard-duel": TypingWizardDuelGame,
+  "zombie-survival": ZombieSurvivalGame,
+  "typing-restaurant": TypingRestaurantGame,
 };
 
-const ICON_MAP = { "circle-dot": CircleDot, "cloud-rain": CloudRain, circle: Circle, wind: Wind };
+const ICON_MAP = {
+  "circle-dot": CircleDot,
+  "cloud-rain": CloudRain,
+  circle: Circle,
+  wind: Wind,
+  car: Car,
+  zap: Zap,
+  search: Search,
+  shield: Shield,
+  heart: Heart,
+  brain: Brain,
+  coffee: Coffee,
+  swords: Swords,
+};
 
 function ensureGameDefaults(u) {
   if (!u) return u;
   const merged = { ...u };
   merged.gameSettings = { ...DEFAULT_GAME_SETTINGS, ...(u.gameSettings || {}) };
   merged.gameStats = { ...(u.gameStats || {}) };
-  GAME_DEFS.forEach((g) => {
-    if (!merged.gameStats[g.id]) {
-      merged.gameStats[g.id] = { bestScore: 0, gamesPlayed: 0, bestCombo: 0, totalWordsEaten: 0 };
+
+  // Ensure all 10 games have stats entries
+  const allGameIds = [
+    "word-muncher",
+    "falling-feast",
+    "bubble-buffet",
+    "runner-rush",
+    "type-racer",
+    "word-invasion",
+    "typing-detective",
+    "typing-wizard-duel",
+    "zombie-survival",
+    "typing-restaurant",
+  ];
+
+  allGameIds.forEach((id) => {
+    if (!merged.gameStats[id]) {
+      merged.gameStats[id] = {
+        bestScore: 0,
+        gamesPlayed: 0,
+        bestCombo: 0,
+        totalWordsEaten: 0,
+        lastScore: 0,
+      };
     }
   });
+
   return merged;
 }
 
+// ============================================================================
+// Guest Modal
+// ============================================================================
 function ArcadeGuestModal({ onGuest, onLogin }) {
   return (
     <div className="skg-guest-overlay">
       <div className="skg-guest-modal">
         <div className="skg-guest-logo">
-          <Gamepad2 size={30} />
+          <Gamepad2 size={32} />
+          <div className="skg-guest-logo-ring" />
         </div>
         <h2 className="skg-guest-title">SwiftKeys Arcade</h2>
+        <p className="skg-guest-tagline">Type fast. Eat words. Score big.</p>
         <p className="skg-guest-desc">
-          A few hungry little typists are waiting. Sign in to keep your high
-          scores everywhere, or jump straight in as a guest.
+          Ten arcade games that turn typing practice into pure fun. Sign in to
+          track high scores everywhere, or jump in as a guest.
         </p>
         <div className="skg-guest-actions">
-          <button className="skg-btn skg-btn-primary" onClick={onLogin}>
-            <LogIn size={16} /> Login / Sign Up
+          <button
+            className="skg-btn skg-btn-primary skg-btn-lg"
+            onClick={onLogin}
+          >
+            <LogIn size={17} /> Login / Sign Up
           </button>
-          <button className="skg-btn skg-btn-ghost" onClick={onGuest}>
-            <User size={16} /> Continue as Guest
+          <button
+            className="skg-btn skg-btn-ghost skg-btn-lg"
+            onClick={onGuest}
+          >
+            <User size={17} /> Continue as Guest
           </button>
         </div>
-        <p className="skg-guest-note">Guest progress is saved on this device only.</p>
+        <p className="skg-guest-note">
+          Guest progress saved on this device only.
+        </p>
       </div>
     </div>
   );
 }
 
+// ============================================================================
+// Score card for a single game
+// ============================================================================
+function ScorePill({ stat, accent }) {
+  if (!stat || stat.gamesPlayed === 0) return null;
+  return (
+    <div className="skg-score-pill" style={{ "--accent": accent }}>
+      <Trophy size={11} />
+      <span>{stat.bestScore}</span>
+    </div>
+  );
+}
+
+// ============================================================================
+// Category filter tabs
+// ============================================================================
+const CATEGORIES = [
+  { id: "all", label: "All Games" },
+  { id: "classic", label: "Classic" },
+  { id: "speed", label: "Speed" },
+  { id: "competitive", label: "Compete" },
+  { id: "strategy", label: "Strategy" },
+  { id: "survival", label: "Survival" },
+];
+
+// ============================================================================
+// Avatar gallery item
+// ============================================================================
+function AvatarCard({ avatar, isSelected, avatarColor, onSelect, size = 56 }) {
+  return (
+    <button
+      className={`skg-avatar-card${isSelected ? " skg-avatar-card-active" : ""}`}
+      style={{ "--acc": avatarColor || avatar.primary }}
+      onClick={() => onSelect(avatar.id)}
+      title={avatar.name}
+    >
+      <GameAvatar
+        avatar={{ ...avatar, primary: avatarColor || avatar.primary }}
+        state="idle"
+        size={size}
+      />
+      <span className="skg-avatar-card-name">{avatar.name}</span>
+      {avatar.category && (
+        <span className="skg-avatar-card-cat">{avatar.category}</span>
+      )}
+    </button>
+  );
+}
+
+// ============================================================================
+// Main hub
+// ============================================================================
 export default function TypingGamesHub() {
   const { isDarkMode } = useContext(ThemeContext);
   const navigate = useNavigate();
@@ -120,26 +250,41 @@ export default function TypingGamesHub() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeGameId, setActiveGameId] = useState(null);
   const [sessionKey, setSessionKey] = useState(0);
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [activeAvatarTab, setActiveAvatarTab] = useState("classic");
 
-  // ---- load avatars/sound packs/game list, API first, static fallback ----
-  useEffect(() => {
-    (async () => {
-      setAvatars(await apiGet(GAME_API_ROUTES.avatars, GAME_AVATARS));
-      setSoundPacks(await apiGet(GAME_API_ROUTES.soundPacks, SOUND_PACKS));
-      setGameDefs(await apiGet(GAME_API_ROUTES.gameList, GAME_DEFS));
-    })();
-  }, []);
-
-  // ---- auth check, then user-data or guest fallback (mirrors the Typing Test page) ----
+  // ---- asset load ----------------------------------------------------------
   useEffect(() => {
     (async () => {
       try {
-        const meRes = await fetch("/api/user/profile/me", { credentials: "include" });
+        const avatarsData = await apiGet(GAME_API_ROUTES.avatars, GAME_AVATARS);
+        setAvatars(avatarsData);
+
+        const soundData = await apiGet(GAME_API_ROUTES.soundPacks, SOUND_PACKS);
+        setSoundPacks(soundData);
+
+        const gameData = await apiGet(GAME_API_ROUTES.gameList, GAME_DEFS);
+        setGameDefs(gameData);
+      } catch (error) {
+        console.error("Failed to load game assets:", error);
+      }
+    })();
+  }, []);
+
+  // ---- auth ----------------------------------------------------------------
+  useEffect(() => {
+    (async () => {
+      try {
+        const meRes = await fetch("/api/user/profile/me", {
+          credentials: "include",
+        });
         if (meRes.ok) {
           const me = await meRes.json();
           if (me.success && me.user) {
             setIsAuthenticated(true);
-            const dataRes = await fetch("/api/user/profile/user-data", { credentials: "include" });
+            const dataRes = await fetch("/api/user/profile/user-data", {
+              credentials: "include",
+            });
             if (dataRes.ok) {
               const dataJson = await dataRes.json();
               if (dataJson.success && dataJson.userData) {
@@ -156,7 +301,6 @@ export default function TypingGamesHub() {
         const guest = lsGet(LS_KEY);
         if (guest?.guestId) {
           setUserData(ensureGameDefaults(guest));
-          setShowGuestModal(false);
         } else {
           setShowGuestModal(true);
         }
@@ -189,7 +333,9 @@ export default function TypingGamesHub() {
     (next) => {
       setUserData(next);
       if (isAuthenticated) {
-        apiPost(GAME_API_ROUTES.saveSettings, { gameSettings: next.gameSettings });
+        apiPost(GAME_API_ROUTES.saveSettings, {
+          gameSettings: next.gameSettings,
+        });
       } else {
         lsSet(LS_KEY, next);
       }
@@ -199,7 +345,10 @@ export default function TypingGamesHub() {
 
   const updateSetting = (key, value) => {
     if (!userData) return;
-    persist({ ...userData, gameSettings: { ...userData.gameSettings, [key]: value } });
+    persist({
+      ...userData,
+      gameSettings: { ...userData.gameSettings, [key]: value },
+    });
   };
 
   const settings = userData?.gameSettings || DEFAULT_GAME_SETTINGS;
@@ -209,23 +358,29 @@ export default function TypingGamesHub() {
     return { ...a, primary: settings.avatarColor || a.primary };
   }, [avatars, settings.avatarId, settings.avatarColor]);
 
+  // ---- game finish ---------------------------------------------------------
   const handleGameFinish = useCallback(
     (result) => {
       if (!userData) return;
-      const prevStat =
-        userData.gameStats?.[result.gameId] || {
-          bestScore: 0,
-          gamesPlayed: 0,
-          bestCombo: 0,
-          totalWordsEaten: 0,
-        };
+      const prevStat = userData.gameStats?.[result.gameId] || {
+        bestScore: 0,
+        gamesPlayed: 0,
+        bestCombo: 0,
+        totalWordsEaten: 0,
+        lastScore: 0,
+      };
+      const isNewBest = result.score > prevStat.bestScore;
       const nextStat = {
         bestScore: Math.max(prevStat.bestScore, result.score),
+        lastScore: result.score,
         gamesPlayed: prevStat.gamesPlayed + 1,
         bestCombo: Math.max(prevStat.bestCombo, result.maxCombo),
         totalWordsEaten: prevStat.totalWordsEaten + result.wordsCompleted,
       };
-      const next = { ...userData, gameStats: { ...userData.gameStats, [result.gameId]: nextStat } };
+      const next = {
+        ...userData,
+        gameStats: { ...userData.gameStats, [result.gameId]: nextStat },
+      };
       setUserData(next);
 
       if (isAuthenticated) {
@@ -233,18 +388,8 @@ export default function TypingGamesHub() {
       } else {
         lsSet(LS_KEY, next);
       }
-
-      Swal.fire({
-        icon: result.score > prevStat.bestScore ? "success" : "info",
-        title: result.score > prevStat.bestScore ? "New Best Score!" : "Game Over",
-        text: `${result.score} pts • best combo x${result.maxCombo}`,
-        timer: 2200,
-        showConfirmButton: false,
-        background: isDarkMode ? "#131829" : "#fff",
-        color: isDarkMode ? "#eef2ff" : "#131829",
-      });
     },
-    [userData, isAuthenticated, isDarkMode],
+    [userData, isAuthenticated],
   );
 
   const startGame = (id) => {
@@ -254,12 +399,39 @@ export default function TypingGamesHub() {
   const restartGame = () => setSessionKey((k) => k + 1);
   const exitGame = () => setActiveGameId(null);
 
+  // ---- filtered games -------------------------------------------------------
+  const filteredGames = useMemo(() => {
+    if (categoryFilter === "all") return gameDefs;
+    const tagMap = {
+      classic: ["classic", "pressure", "reflex", "chill"],
+      speed: ["speed", "horizontal", "vertical"],
+      competitive: ["competitive", "racing", "shooter", "waves"],
+      strategy: ["strategy", "detective", "wizard", "restaurant", "story"],
+      survival: ["survival", "zombie", "defense"],
+    };
+    const tags = tagMap[categoryFilter] || [];
+    return gameDefs.filter((g) => g.tags?.some((t) => tags.includes(t)));
+  }, [gameDefs, categoryFilter]);
+
+  // ---- avatar tabs ---------------------------------------------------------
+  const avatarsByCategory = useMemo(() => {
+    const cats = ["classic", "anime", "scifi", "fantasy"];
+    return cats.reduce((acc, cat) => {
+      acc[cat] = avatars.filter((a) => a.category === cat);
+      return acc;
+    }, {});
+  }, [avatars]);
+
+  // ---- loading screen -------------------------------------------------------
   if (authLoading) {
     return (
       <div className={`skg-root ${isDarkMode ? "dark" : "light"}`}>
         <div className="skg-loading-screen">
-          <div className="skg-loading-spinner" />
-          <p>Loading the arcade…</p>
+          <div className="skg-loading-orbit">
+            <div className="skg-loading-planet" />
+            <div className="skg-loading-satellite" />
+          </div>
+          <p className="skg-loading-text">Warming up the arcade…</p>
         </div>
       </div>
     );
@@ -270,9 +442,13 @@ export default function TypingGamesHub() {
   return (
     <div className={`skg-root ${isDarkMode ? "dark" : "light"}`}>
       {!isAuthenticated && showGuestModal && !userData?.guestId && (
-        <ArcadeGuestModal onGuest={handleGuest} onLogin={() => navigate("/user/auth/login")} />
+        <ArcadeGuestModal
+          onGuest={handleGuest}
+          onLogin={() => navigate("/user/auth/login")}
+        />
       )}
 
+      {/* ===== ACTIVE GAME ===== */}
       {ActiveGame ? (
         <ActiveGame
           key={sessionKey}
@@ -280,56 +456,122 @@ export default function TypingGamesHub() {
           difficulty={settings.difficulty}
           sessionSeconds={settings.sessionSeconds || 60}
           settings={settings}
+          userData={userData}
           onExit={exitGame}
           onRestart={restartGame}
           onFinish={handleGameFinish}
         />
       ) : (
         <>
+          {/* ===== HERO ===== */}
           <div className="skg-hero">
-            <GameAvatar avatar={selectedAvatar} state="idle" size={84} reduceMotion={settings.reduceMotion} />
+            <div className="skg-hero-avatar-wrap">
+              <GameAvatar
+                avatar={selectedAvatar}
+                state="idle"
+                comboLevel={1}
+                size={90}
+                reduceMotion={settings.reduceMotion}
+              />
+              <div
+                className="skg-hero-avatar-glow"
+                style={{ background: selectedAvatar.primary }}
+              />
+            </div>
             <div className="skg-hero-text">
               <div className="skg-hero-eyebrow">
-                <Sparkles size={13} /> SwiftKeys Arcade
+                <Sparkles size={12} /> SwiftKeys Arcade
               </div>
-              <h1 className="skg-hero-title">Type it right, watch it get eaten.</h1>
+              <h1 className="skg-hero-title">
+                Type it right,
+                <br />
+                <span className="skg-hero-title-accent">
+                  watch it get eaten.
+                </span>
+              </h1>
               <p className="skg-hero-tagline">
-                Four bite-sized arcade games built around one idea: every
-                correct word feeds your character. Mistakes just make them flinch.
+                Ten arcade games where your WPM is the weapon.
               </p>
             </div>
             <div className="skg-hero-side">
               <div className="skg-profile-chip">
-                {userData?.name || "Guest"} • Lv {userData?.level || 1}
+                <div
+                  className="skg-profile-chip-avatar"
+                  style={{ background: selectedAvatar.primary }}
+                >
+                  {(userData?.name || "G")[0]}
+                </div>
+                <div>
+                  <div className="skg-profile-name">
+                    {userData?.name || "Guest"}
+                  </div>
+                  <div className="skg-profile-meta">
+                    Level {userData?.level || 1}
+                  </div>
+                </div>
               </div>
-              <button className="skg-settings-toggle" onClick={() => setSettingsOpen((o) => !o)}>
-                <SlidersHorizontal size={16} /> Customize
-                <ChevronDown size={14} className={settingsOpen ? "skg-chev-up" : ""} />
+              <button
+                className="skg-settings-toggle"
+                onClick={() => setSettingsOpen((o) => !o)}
+              >
+                <SlidersHorizontal size={15} />
+                Customize
+                <ChevronDown
+                  size={13}
+                  className={settingsOpen ? "skg-chev-up" : ""}
+                />
               </button>
             </div>
           </div>
 
+          {/* ===== SETTINGS PANEL ===== */}
           {settingsOpen && (
             <div className="skg-settings">
-              <div className="skg-setting-group">
+              {/* Avatar selector with tabs */}
+              <div className="skg-setting-group skg-setting-group-wide">
                 <div className="skg-setting-label">
                   <User size={13} /> Character
                 </div>
-                <div className="skg-swatch-row">
-                  {avatars.map((a) => (
+                <div className="skg-avatar-tabs">
+                  {["classic", "anime", "scifi", "fantasy"].map((cat) => (
                     <button
-                      key={a.id}
-                      className={`skg-swatch${settings.avatarId === a.id ? " skg-swatch-active" : ""}`}
-                      style={{ "--skg-sw": a.primary }}
-                      onClick={() => updateSetting("avatarId", a.id)}
-                      title={a.name}
+                      key={cat}
+                      className={`skg-avatar-tab${activeAvatarTab === cat ? " skg-avatar-tab-active" : ""}`}
+                      onClick={() => setActiveAvatarTab(cat)}
                     >
-                      {a.name[0]}
+                      {cat}
                     </button>
                   ))}
                 </div>
+                <div className="skg-avatar-gallery">
+                  {(avatarsByCategory[activeAvatarTab] || []).map((a) => (
+                    <AvatarCard
+                      key={a.id}
+                      avatar={a}
+                      isSelected={settings.avatarId === a.id}
+                      avatarColor={
+                        settings.avatarId === a.id ? settings.avatarColor : null
+                      }
+                      onSelect={(id) => {
+                        updateSetting("avatarId", id);
+                        updateSetting(
+                          "soundPackId",
+                          a.defaultSoundPack || settings.soundPackId,
+                        );
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* Selected avatar tagline */}
+                {selectedAvatar && (
+                  <div className="skg-avatar-tagline">
+                    <span style={{ color: selectedAvatar.primary }}>▸</span>{" "}
+                    {selectedAvatar.tagline}
+                  </div>
+                )}
               </div>
 
+              {/* Recolor */}
               <div className="skg-setting-group">
                 <div className="skg-setting-label">
                   <Palette size={13} /> Recolor
@@ -352,9 +594,15 @@ export default function TypingGamesHub() {
                 </div>
               </div>
 
+              {/* Sound pack */}
               <div className="skg-setting-group">
                 <div className="skg-setting-label">
-                  {settings.soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />} Sound Pack
+                  {settings.soundOn ? (
+                    <Volume2 size={13} />
+                  ) : (
+                    <VolumeX size={13} />
+                  )}{" "}
+                  Sound
                 </div>
                 <select
                   className="skg-select"
@@ -367,6 +615,12 @@ export default function TypingGamesHub() {
                     </option>
                   ))}
                 </select>
+                <div className="skg-sound-pack-desc">
+                  {
+                    soundPacks.find((p) => p.id === settings.soundPackId)
+                      ?.description
+                  }
+                </div>
                 <label className="skg-slider-row">
                   <span>Volume</span>
                   <input
@@ -375,11 +629,16 @@ export default function TypingGamesHub() {
                     max="1"
                     step="0.05"
                     value={settings.masterVolume}
-                    onChange={(e) => updateSetting("masterVolume", parseFloat(e.target.value))}
+                    onChange={(e) =>
+                      updateSetting("masterVolume", parseFloat(e.target.value))
+                    }
                   />
+                  <span className="skg-vol-num">
+                    {Math.round(settings.masterVolume * 100)}%
+                  </span>
                 </label>
                 <label className="skg-toggle-row">
-                  <span>Sound effects</span>
+                  <span>Enable sound</span>
                   <span
                     className={`skg-toggle${settings.soundOn ? " skg-toggle-on" : ""}`}
                     onClick={() => updateSetting("soundOn", !settings.soundOn)}
@@ -387,82 +646,222 @@ export default function TypingGamesHub() {
                 </label>
               </div>
 
+              {/* Difficulty */}
               <div className="skg-setting-group">
                 <div className="skg-setting-label">
                   <Settings2 size={13} /> Difficulty &amp; Session
                 </div>
-                <select
-                  className="skg-select"
-                  value={settings.difficulty}
-                  onChange={(e) => updateSetting("difficulty", e.target.value)}
-                >
+                <div className="skg-diff-pills">
                   {DIFFICULTIES.map((d) => (
-                    <option key={d.id} value={d.id}>
+                    <button
+                      key={d.id}
+                      className={`skg-diff-pill${settings.difficulty === d.id ? " skg-diff-active" : ""}`}
+                      onClick={() => updateSetting("difficulty", d.id)}
+                    >
                       {d.label}
-                    </option>
+                    </button>
                   ))}
-                </select>
-                <select
-                  className="skg-select"
-                  value={settings.sessionSeconds || 60}
-                  onChange={(e) => updateSetting("sessionSeconds", parseInt(e.target.value, 10))}
-                >
+                </div>
+                <div className="skg-session-pills">
                   {SESSION_LENGTHS.map((s) => (
-                    <option key={s} value={s}>
+                    <button
+                      key={s}
+                      className={`skg-session-pill${(settings.sessionSeconds || 60) === s ? " skg-session-active" : ""}`}
+                      onClick={() => updateSetting("sessionSeconds", s)}
+                    >
                       {s}s
-                    </option>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
+              {/* Accessibility */}
               <div className="skg-setting-group">
                 <div className="skg-setting-label">Accessibility</div>
-                <label className="skg-toggle-row">
-                  <span>Next-key beacon</span>
-                  <span
-                    className={`skg-toggle${settings.beaconOn ? " skg-toggle-on" : ""}`}
-                    onClick={() => updateSetting("beaconOn", !settings.beaconOn)}
-                  />
-                </label>
-                <label className="skg-toggle-row">
-                  <span>Eat particles</span>
-                  <span
-                    className={`skg-toggle${settings.particlesOn ? " skg-toggle-on" : ""}`}
-                    onClick={() => updateSetting("particlesOn", !settings.particlesOn)}
-                  />
-                </label>
-                <label className="skg-toggle-row">
-                  <span>Reduce motion</span>
-                  <span
-                    className={`skg-toggle${settings.reduceMotion ? " skg-toggle-on" : ""}`}
-                    onClick={() => updateSetting("reduceMotion", !settings.reduceMotion)}
-                  />
-                </label>
+                {[
+                  ["beaconOn", "Next-key beacon"],
+                  ["particlesOn", "Eat particles"],
+                  ["reduceMotion", "Reduce motion"],
+                ].map(([key, label]) => (
+                  <label key={key} className="skg-toggle-row">
+                    <span>{label}</span>
+                    <span
+                      className={`skg-toggle${settings[key] ? " skg-toggle-on" : ""}`}
+                      onClick={() => updateSetting(key, !settings[key])}
+                    />
+                  </label>
+                ))}
               </div>
             </div>
           )}
 
+          {/* ===== CATEGORY FILTER ===== */}
+          <div className="skg-category-bar">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                className={`skg-cat-btn${categoryFilter === cat.id ? " skg-cat-active" : ""}`}
+                onClick={() => setCategoryFilter(cat.id)}
+              >
+                {cat.label}
+              </button>
+            ))}
+            <div className="skg-cat-spacer" />
+            <div className="skg-game-count">{filteredGames.length} games</div>
+          </div>
+
+          {/* ===== GAME GRID ===== */}
           <div className="skg-game-grid">
-            {gameDefs.map((g) => {
+            {filteredGames.map((g) => {
               const Icon = ICON_MAP[g.iconKey] || Gamepad2;
               const stat = userData?.gameStats?.[g.id];
+              const hasPlayed = stat?.gamesPlayed > 0;
+              const nextTarget = hasPlayed
+                ? Math.ceil((stat.bestScore * 1.2) / 100) * 100
+                : null;
+
               return (
-                <div key={g.id} className="skg-game-card" style={{ "--skg-card-accent": g.accent }}>
-                  <div className="skg-game-card-icon">
-                    <Icon size={26} />
+                <div
+                  key={g.id}
+                  className={`skg-game-card${g.isNew ? " skg-game-card-new" : ""}`}
+                  style={{ "--skg-card-accent": g.accent }}
+                >
+                  {g.isNew && <div className="skg-new-badge">NEW</div>}
+
+                  <div className="skg-game-card-top">
+                    <div className="skg-game-card-icon">
+                      <Icon size={24} />
+                    </div>
+                    <div className="skg-game-card-meta">
+                      {hasPlayed && (
+                        <div className="skg-plays-badge">
+                          {stat.gamesPlayed}× played
+                        </div>
+                      )}
+                    </div>
                   </div>
+
                   <div className="skg-game-card-name">{g.name}</div>
                   <p className="skg-game-card-tag">{g.tagline}</p>
-                  {stat?.gamesPlayed > 0 && (
-                    <div className="skg-game-card-best">Best: {stat.bestScore} pts</div>
+                  {g.description && (
+                    <p className="skg-game-card-desc">{g.description}</p>
                   )}
-                  <button className="skg-play-btn" onClick={() => startGame(g.id)}>
-                    Play
+
+                  {/* Score section */}
+                  {hasPlayed ? (
+                    <div className="skg-score-section">
+                      <div className="skg-score-row">
+                        <div className="skg-score-item">
+                          <span className="skg-score-label">
+                            <Trophy size={10} /> Best
+                          </span>
+                          <span
+                            className="skg-score-val"
+                            style={{ color: g.accent }}
+                          >
+                            {stat.bestScore}
+                          </span>
+                        </div>
+                        <div className="skg-score-item">
+                          <span className="skg-score-label">
+                            <TrendingUp size={10} /> Last
+                          </span>
+                          <span className="skg-score-val">
+                            {stat.lastScore}
+                          </span>
+                        </div>
+                        <div className="skg-score-item">
+                          <span className="skg-score-label">
+                            <Flame size={10} /> Combo
+                          </span>
+                          <span className="skg-score-val">
+                            x{stat.bestCombo}
+                          </span>
+                        </div>
+                      </div>
+                      {nextTarget && (
+                        <div className="skg-next-target">
+                          <Target size={10} />
+                          <span>
+                            Next: <strong>{nextTarget}</strong>
+                          </span>
+                          <div className="skg-target-bar">
+                            <div
+                              className="skg-target-fill"
+                              style={{
+                                width: `${Math.min((stat.bestScore / nextTarget) * 100, 100)}%`,
+                                background: g.accent,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="skg-score-empty">
+                      <Star size={11} /> No score yet — be the first!
+                    </div>
+                  )}
+
+                  {/* Tags */}
+                  <div className="skg-tag-row">
+                    {g.tags?.map((t) => (
+                      <span key={t} className="skg-tag">
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+
+                  <button
+                    className="skg-play-btn"
+                    onClick={() => startGame(g.id)}
+                  >
+                    Play <ChevronRight size={14} />
                   </button>
                 </div>
               );
             })}
           </div>
+
+          {/* ===== GLOBAL STATS BAR ===== */}
+          {userData && (
+            <div className="skg-stats-bar">
+              <div className="skg-stats-bar-item">
+                <Gamepad2 size={14} />
+                <span>
+                  {Object.values(userData.gameStats || {}).reduce(
+                    (a, s) => a + (s.gamesPlayed || 0),
+                    0,
+                  )}{" "}
+                  total games
+                </span>
+              </div>
+              <div className="skg-stats-bar-item">
+                <Trophy size={14} />
+                <span>
+                  Best:{" "}
+                  {Math.max(
+                    0,
+                    ...Object.values(userData.gameStats || {}).map(
+                      (s) => s.bestScore || 0,
+                    ),
+                  )}
+                </span>
+              </div>
+              <div className="skg-stats-bar-item">
+                <Flame size={14} />
+                <span>
+                  Best combo: x
+                  {Math.max(
+                    0,
+                    ...Object.values(userData.gameStats || {}).map(
+                      (s) => s.bestCombo || 0,
+                    ),
+                  )}
+                </span>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

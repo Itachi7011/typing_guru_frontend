@@ -19,6 +19,7 @@ import {
   Keyboard,
   Settings,
   Globe,
+    Joystick,
   Home,
   Brain,
   Star,
@@ -188,6 +189,7 @@ export default function Navbar() {
       ],
     },
     { label: "Languages", path: "/languages", icon: Globe },
+    { label: "Games", path: "/games", icon:   Joystick, },
     { label: "Govt Exams", path: "/exams", icon: GraduationCap },
   ];
 
@@ -241,7 +243,7 @@ export default function Navbar() {
             <Zap size={22} />
           </div>
           <div className="sk-logo-text">
-            <span className="sk-logo-name">Typing Exam Hub</span>
+            <span className="sk-logo-name">Typing Hub</span>
             <span className="sk-logo-sub">Typing Coach</span>
           </div>
         </div>

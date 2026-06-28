@@ -13,6 +13,7 @@ import "./css/Public/Drill.css";
 import "./css/Public/DailyChallenge.css";
 import "./css/Public/Typinggameshub.css";
 import "./css/Public/Typinggamesplay.css";
+import "./css/Public/Typinggamesscorestrip.css";
 
 import "./css/Users/Auth.css";
 import "./css/Users/Profile.css";
