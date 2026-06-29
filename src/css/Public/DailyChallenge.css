@@ -3,8 +3,7 @@
    Additive responsive layer for Daily Challenge (dc-*) and
    Analytics (an-*) pages. Does NOT redefine existing rules —
    only new "dcr-" / "anr-" prefixed classes + targeted media
-   queries for existing dc-*/
-an-* selectors are added so nothing
+   queries for existing dc-an-* selectors are added so nothing
    clashes with AnalyticsAndDailyChallenge.css.
    ════════════════════════════════════════════════════════════ */
 
