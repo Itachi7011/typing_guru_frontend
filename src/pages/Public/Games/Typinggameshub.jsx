@@ -42,8 +42,8 @@ import {
   Brain,
   Coffee,
   Swords,
-} from "lucide-react";
-
+} from "lucide-react"; 
+ 
 import {
   LS_KEY,
   lsGet,
