@@ -264,18 +264,9 @@ function applyMixedCase(text) {
 }
 
 // ── GENERATE DRILL TEXT ───────────────────────────────────────────────────────
-function generateDrillText(targets, drillMode, caps, language) {
-  const langData = SUPPORTED_LANGS.find((l) => l.id === language);
-  const wordPool = langData?.words || FB.english.words;
-
-  if (!targets.length) {
-    let text = shuffle(wordPool).slice(0, 80).join(" ");
-    if (caps && language !== "hindi") text = applyMixedCase(text);
-    return text;
-  }
-
+function buildWordList(wordPool, targets, language) {
+  if (!targets.length) return shuffle(wordPool).slice(0, 100);
   let words = [];
-
   targets.forEach((t) => {
     if (DRILL_FB[language]?.[t])
       words = words.concat(DRILL_FB[language][t].slice(0, 10));
@@ -284,44 +275,110 @@ function generateDrillText(targets, drillMode, caps, language) {
     );
     words = words.concat(containing.slice(0, 8));
   });
+  if (!words.length) words = shuffle(wordPool).slice(0, 60);
+  return [...new Set(words)];
+}
 
-  if (drillMode === "pairs") {
-    targets.forEach((pair) => {
-      if (pair.length >= 2) {
-        for (let i = 0; i < 12; i++) {
-          const base = wordPool[Math.floor(Math.random() * wordPool.length)];
-          words.push(pair + base.slice(0, 3));
-          words.push(base.slice(0, 3) + pair);
+function generateDrillText(targets, drillMode, caps, language) {
+  const langData = SUPPORTED_LANGS.find((l) => l.id === language);
+  const wordPool = langData?.words?.length ? langData.words : FB.english.words;
+  let result = "";
+
+  switch (drillMode) {
+    case "pairs": {
+      const words = buildWordList(wordPool, targets, language);
+      targets.forEach((pair) => {
+        if (pair.length >= 2) {
+          for (let i = 0; i < 12; i++) {
+            const base = wordPool[Math.floor(Math.random() * wordPool.length)];
+            words.push(pair + base.slice(0, 3));
+            words.push(base.slice(0, 3) + pair);
+          }
         }
-      }
-    });
-  }
+      });
+      result = shuffle([...new Set(words)])
+        .slice(0, 100)
+        .join(" ");
+      break;
+    }
 
-  if (drillMode === "single") {
-    targets.forEach((ch) => {
-      const row = [];
-      for (let i = 0; i < 20; i++) {
-        const neighbor =
-          wordPool.filter((w) => w.includes(ch))[i % 5] || ch.repeat(3);
-        row.push(neighbor);
+    case "single": {
+      let words = [];
+      if (targets.length) {
+        targets.forEach((ch) => {
+          const matches = wordPool.filter((w) =>
+            w.toLowerCase().includes(ch.toLowerCase()),
+          );
+          for (let i = 0; i < 20; i++) {
+            words.push(matches[i % (matches.length || 1)] || ch.repeat(3));
+          }
+        });
+      } else {
+        words = shuffle(wordPool).slice(0, 100);
       }
-      words = words.concat(row);
-    });
-  }
+      result = shuffle([...new Set(words)])
+        .slice(0, 100)
+        .join(" ");
+      break;
+    }
 
-  if (drillMode === "speed") {
-    words = words.filter((w) => w.length <= 5);
-    if (words.length < 20)
-      words = words.concat(
-        shuffle(wordPool.filter((w) => w.length <= 5)).slice(0, 20),
+    case "speed": {
+      let pool = buildWordList(wordPool, targets, language).filter(
+        (w) => w.length <= 5,
       );
+      if (pool.length < 20)
+        pool = pool.concat(shuffle(wordPool.filter((w) => w.length <= 5)));
+      result = shuffle([...new Set(pool)])
+        .slice(0, 100)
+        .join(" ");
+      break;
+    }
+
+    // "Slow down, zero errors" — short, clean real words only, no synthetic combos
+    case "accuracy": {
+      let pool = targets.length
+        ? wordPool.filter((w) =>
+            targets.some((t) => w.toLowerCase().includes(t.toLowerCase())),
+          )
+        : wordPool;
+      pool = pool.filter((w) => w.length <= 7);
+      if (pool.length < 30) pool = pool.concat(shuffle(wordPool).slice(0, 40));
+      result = shuffle([...new Set(pool)])
+        .slice(0, 60)
+        .join(" ");
+      break;
+    }
+
+    // Real punctuated sentences — this is what makes Mixed Case work properly here
+    case "sentences": {
+      const filtered = targets.length
+        ? wordPool.filter((w) =>
+            targets.some((t) => w.toLowerCase().includes(t.toLowerCase())),
+          )
+        : wordPool;
+      const pool = filtered.length >= 10 ? filtered : wordPool;
+      const sentences = [];
+      for (let i = 0; i < 14; i++) {
+        const len = 6 + Math.floor(Math.random() * 6);
+        const words = [];
+        for (let j = 0; j < len; j++)
+          words.push(pool[Math.floor(Math.random() * pool.length)]);
+        sentences.push(words.join(" ") + ".");
+      }
+      result = sentences.join(" ");
+      break;
+    }
+
+    case "words":
+    default: {
+      const words = buildWordList(wordPool, targets, language);
+      result = shuffle([...new Set(words)])
+        .slice(0, 100)
+        .join(" ");
+      break;
+    }
   }
 
-  if (!words.length) words = shuffle(wordPool).slice(0, 100);
-
-  let result = shuffle([...new Set(words)])
-    .slice(0, 100)
-    .join(" ");
   if (caps && language !== "hindi") result = applyMixedCase(result);
   return result;
 }
@@ -427,6 +484,10 @@ export default function Drill() {
   const [activeTab, setActiveTab] = useState("letters");
   const [language, setLanguage] = useState("english");
 
+  const [incomingModal, setIncomingModal] = useState(false);
+  const [incomingTargets, setIncomingTargets] = useState([]);
+  const [incomingCustom, setIncomingCustom] = useState("");
+
   // Sidebar collapse state (starts expanded, collapses on mobile after first load)
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -522,11 +583,31 @@ export default function Drill() {
         });
       }
       if (incoming.length) {
-        setTargets(incoming.slice(0, 10));
-        setSidebarOpen(true);
+        setIncomingTargets(incoming.slice(0, 10));
+        setIncomingModal(true);
       }
     }
   }, [location.state]);
+
+  function removeIncomingTarget(val) {
+    setIncomingTargets((t) => t.filter((x) => x !== val));
+  }
+  function addIncomingCustom() {
+    const trimmed = incomingCustom.trim();
+    if (!trimmed) return;
+    setIncomingTargets((t) =>
+      t.includes(trimmed) || t.length >= 10 ? t : [...t, trimmed],
+    );
+    setIncomingCustom("");
+  }
+  function confirmIncomingTargets() {
+    setTargets(incomingTargets);
+    setSidebarOpen(true);
+    setIncomingModal(false);
+  }
+  function skipIncomingTargets() {
+    setIncomingModal(false);
+  }
 
   const generate = useCallback(() => {
     const text = generateDrillText(targets, drillMode, caps, language);
@@ -775,10 +856,10 @@ export default function Drill() {
     const renderedChars = [];
     let globalIndex = offset;
     visibleLines.forEach((line, lineIdx) => {
-      if (line.length === 0) { 
-        renderedChars.push( 
-          <div key={`empty-line-${lineIdx}`} className="dr-empty-line"> 
-            <span className="dr-placeholder-dots">~</span> 
+      if (line.length === 0) {
+        renderedChars.push(
+          <div key={`empty-line-${lineIdx}`} className="dr-empty-line">
+            <span className="dr-placeholder-dots">~</span>
           </div>,
         );
       } else {
@@ -817,6 +898,57 @@ export default function Drill() {
     <div
       className={`dr-root${isDarkMode ? " dark" : " light"} language-${language}`}
     >
+      {incomingModal && (
+        <div className="dr-incoming-overlay">
+          <div className="dr-incoming-modal">
+            <div className="dr-incoming-head">
+              <Target size={18} style={{ color: "var(--tc-accent)" }} />
+              <h3>Practice These Keys?</h3>
+            </div>
+            <p className="dr-incoming-sub">
+              Based on your last test, we picked out the keys below to drill.
+              Remove any you don't want, or add more before you start.
+            </p>
+            <div className="dr-incoming-chips">
+              {incomingTargets.length === 0 && (
+                <span className="dr-chips-empty">
+                  No targets — you'll get a general drill.
+                </span>
+              )}
+              {incomingTargets.map((t) => (
+                <TargetChip key={t} value={t} onRemove={removeIncomingTarget} />
+              ))}
+            </div>
+            <div className="dr-incoming-add">
+              <input
+                className="dr-custom-inp"
+                value={incomingCustom}
+                onChange={(e) => setIncomingCustom(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && addIncomingCustom()}
+                placeholder="Add a key or pair…"
+                maxLength={4}
+              />
+              <button className="dr-add-btn" onClick={addIncomingCustom}>
+                <Plus size={14} />
+              </button>
+            </div>
+            <div className="dr-incoming-actions">
+              <button
+                className="tc-btn tc-btn-sec"
+                onClick={skipIncomingTargets}
+              >
+                Skip, Start Fresh
+              </button>
+              <button
+                className="tc-btn tc-btn-acc"
+                onClick={confirmIncomingTargets}
+              >
+                <CheckCircle size={14} /> Continue to Drill
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="dr-page">
         {/* ── Motivational banner ── */}
         {(location.state?.weakPair || location.state?.weakFinger) && (
@@ -905,10 +1037,7 @@ export default function Drill() {
                         <button
                           key={lang.id}
                           className={`dr-dur-btn${language === lang.id ? " active" : ""}`}
-                          onClick={() => {
-                            setLanguage(lang.id);
-                            generate();
-                          }}
+                          onClick={() => setLanguage(lang.id)}
                         >
                           {lang.flag} {lang.label}
                         </button>

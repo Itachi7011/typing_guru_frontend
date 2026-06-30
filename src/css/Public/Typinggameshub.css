@@ -1988,3 +1988,579 @@
     animation: none !important;
   }
 }
+
+/* ============================================================================
+   SettingsPanelComplete.css
+   Complete styling for the tabbed settings shell (Avatar/Weapon/Sound/
+   Difficulty/Background/Accessibility) and the background picker grid.
+   This replaces/supersedes any earlier partial settings CSS — import this
+   AFTER TypingGamesHub.css so these rules win.
+   ============================================================================ */
+
+/* ============================================================================
+   SETTINGS SHELL — sidebar tabs + content pane
+   ============================================================================ */
+.skg-settings-shell {
+  display: flex;
+  background: var(--skg-surface);
+  border: 1px solid var(--skg-border);
+  border-radius: var(--skg-radius, 18px);
+  margin-top: 0.9rem;
+  overflow: hidden;
+  animation: skg-slide-down 0.2s ease;
+  min-height: 280px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Sidebar tab list */
+.skg-settings-tabs {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 182px;
+  background: var(--skg-surface-alt);
+  border-right: 1px solid var(--skg-border);
+}
+
+.skg-settings-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: none;
+  border-bottom: 1px solid var(--skg-border);
+  background: transparent;
+  color: var(--skg-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+.skg-settings-tab:last-child {
+  border-bottom: none;
+}
+.skg-settings-tab:hover {
+  background: var(--skg-surface-raised);
+  color: var(--skg-text);
+}
+.skg-settings-tab-active {
+  background: var(--skg-surface);
+  color: var(--skg-cyan);
+  box-shadow: inset 3px 0 0 var(--skg-cyan);
+}
+.skg-settings-tab svg {
+  flex-shrink: 0;
+}
+.skg-tab-label {
+  line-height: 1.2;
+}
+
+/* Content pane */
+.skg-settings-content {
+  flex: 1;
+  min-width: 0;
+  padding: 1.1rem 1.2rem;
+  overflow: auto;
+  max-height: 60vh;
+}
+
+.skg-settings-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  width: 100%;
+}
+
+/* ============================================================================
+   SETTING GROUPS (generic, used inside every tab)
+   ============================================================================ */
+.skg-setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+.skg-setting-group-wide {
+  width: 100%;
+}
+
+.skg-setting-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--skg-text-muted);
+  font-weight: 800;
+}
+
+/* ============================================================================
+   TOOLTIP (skr-tip-*)
+   ============================================================================ */
+.skr-tip-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: help;
+}
+.skr-tip-icon {
+  color: var(--skg-text-dim);
+  transition: color 0.15s;
+}
+.skr-tip-wrap:hover .skr-tip-icon {
+  color: var(--skg-cyan);
+}
+.skr-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  transform: translateX(-10%);
+  background: var(--skg-surface-raised);
+  border: 1px solid var(--skg-border);
+  color: var(--skg-text);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: normal;
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  width: 220px;
+  z-index: 200;
+  pointer-events: none;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  animation: skg-slide-down 0.12s ease;
+}
+
+/* ============================================================================
+   AVATAR TAB
+   ============================================================================ */
+.skg-avatar-tabs {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.55rem;
+}
+.skg-avatar-tab {
+  background: var(--skg-surface-alt);
+  border: 1px solid var(--skg-border);
+  color: var(--skg-text-muted);
+  border-radius: 999px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-transform: capitalize;
+  transition: all 0.15s ease;
+}
+.skg-avatar-tab:hover {
+  border-color: var(--skg-border-bright);
+  color: var(--skg-text);
+}
+.skg-avatar-tab-active {
+  background: var(--skg-cyan-dim);
+  border-color: var(--skg-cyan);
+  color: var(--skg-cyan);
+}
+
+.skg-avatar-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 0.5rem;
+}
+.skg-avatar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--skg-surface-alt);
+  border: 2px solid var(--skg-border);
+  border-radius: 12px;
+  padding: 0.55rem 0.4rem;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.skg-avatar-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--acc, var(--skg-cyan));
+}
+.skg-avatar-card-active {
+  border-color: var(--acc, var(--skg-cyan));
+  background: color-mix(
+    in srgb,
+    var(--acc, var(--skg-cyan)) 12%,
+    var(--skg-surface-alt)
+  );
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--acc, var(--skg-cyan)) 20%, transparent);
+}
+.skg-avatar-card-name {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--skg-text);
+}
+.skg-avatar-card-cat {
+  font-size: 0.58rem;
+  color: var(--skg-text-muted);
+}
+.skg-avatar-tagline {
+  font-size: 0.76rem;
+  color: var(--skg-text-muted);
+  font-style: italic;
+  line-height: 1.45;
+}
+
+/* Color swatches */
+.skg-swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.skg-swatch {
+  --skg-sw: var(--skg-cyan);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2.5px solid transparent;
+  background: var(--skg-sw);
+  cursor: pointer;
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #0a0d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+  flex-shrink: 0;
+}
+.skg-swatch:hover {
+  transform: scale(1.15);
+}
+.skg-swatch-active {
+  border-color: var(--skg-text);
+  box-shadow:
+    0 0 0 2px var(--skg-bg),
+    0 0 0 4px var(--skg-sw);
+}
+.skg-swatch-default {
+  width: auto;
+  border-radius: 999px;
+  padding: 0 0.6rem;
+  background: var(--skg-surface-raised);
+  color: var(--skg-text-muted);
+  font-size: 0.68rem;
+  border-color: var(--skg-border);
+}
+
+/* ============================================================================
+   WEAPON / PROJECTILE TAB
+   ============================================================================ */
+.skg-projectile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 0.5rem;
+}
+.skg-proj-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.22rem;
+  background: var(--skg-surface-alt);
+  border: 1.5px solid var(--skg-border);
+  border-radius: 10px;
+  padding: 0.55rem 0.4rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: center;
+  color: var(--skg-text);
+}
+.skg-proj-btn:hover {
+  border-color: var(--skg-cyan);
+  transform: translateY(-1px);
+}
+.skg-proj-active {
+  border-color: var(--skg-cyan);
+  background: var(--skg-cyan-dim);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--skg-cyan) 22%, transparent);
+}
+.skg-proj-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+.skg-proj-desc {
+  font-size: 0.58rem;
+  color: var(--skg-text-muted);
+}
+
+/* ============================================================================
+   SOUND TAB
+   ============================================================================ */
+.skg-select {
+  width: 100%;
+  background: var(--skg-surface-alt);
+  border: 1px solid var(--skg-border);
+  color: var(--skg-text);
+  border-radius: 10px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.84rem;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.skg-sound-pack-desc {
+  font-size: 0.72rem;
+  color: var(--skg-text-muted);
+  font-style: italic;
+  line-height: 1.4;
+}
+.skg-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.82rem;
+  color: var(--skg-text);
+}
+.skg-slider-row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--skg-cyan);
+}
+.skg-vol-num {
+  font-size: 0.72rem;
+  color: var(--skg-text-muted);
+  min-width: 2.8rem;
+  text-align: right;
+  flex-shrink: 0;
+}
+.skg-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.82rem;
+  color: var(--skg-text);
+}
+.skg-toggle {
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--skg-border);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.18s ease;
+  flex-shrink: 0;
+}
+.skg-toggle::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.skg-toggle-on {
+  background: var(--skg-cyan);
+}
+.skg-toggle-on::after {
+  transform: translateX(18px);
+}
+
+/* ============================================================================
+   DIFFICULTY TAB
+   ============================================================================ */
+.skg-diff-pills,
+.skg-session-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.skg-diff-pill,
+.skg-session-pill {
+  background: var(--skg-surface-alt);
+  border: 1.5px solid var(--skg-border);
+  color: var(--skg-text-muted);
+  border-radius: 999px;
+  padding: 0.32rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  white-space: nowrap;
+}
+.skg-diff-pill:hover,
+.skg-session-pill:hover {
+  border-color: var(--skg-border-bright);
+  color: var(--skg-text);
+}
+.skg-diff-active,
+.skg-session-active {
+  background: var(--skg-cyan-dim);
+  border-color: var(--skg-cyan);
+  color: var(--skg-cyan);
+}
+
+/* ============================================================================
+   BACKGROUND TAB — fixed picker grid
+   ============================================================================ */
+.skg-bg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 0.55rem;
+}
+
+.skg-bg-swatch {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/10;
+  border-radius: 10px;
+  border: 2px solid var(--skg-border);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.15s ease;
+  background-size: cover;
+  background-position: center;
+  display: block;
+}
+.skg-bg-swatch:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--skg-border-bright);
+}
+.skg-bg-swatch-active {
+  border-color: var(--skg-cyan);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--skg-cyan) 28%, transparent);
+}
+.skg-bg-swatch-label {
+  position: absolute;
+  inset: auto 0 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.25rem 0.2rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+  pointer-events: none;
+}
+
+.skg-bg-upload-btn {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  width: 100%;
+  aspect-ratio: 16/10;
+  background: var(--skg-surface-alt);
+  border: 2px dashed var(--skg-border);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.62rem;
+  color: var(--skg-text-muted);
+  font-weight: 700;
+  transition: all 0.15s ease;
+  box-sizing: border-box;
+}
+.skg-bg-upload-btn:hover {
+  border-color: var(--skg-cyan);
+  color: var(--skg-cyan);
+  background: var(--skg-cyan-dim);
+}
+.skg-bg-upload-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.skg-bg-custom-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.skg-bg-hint {
+  font-size: 0.68rem;
+  color: var(--skg-text-dim);
+  margin-top: 0.2rem;
+}
+
+/* Game background overlay (keeps in-game text readable over custom images) */
+.skg-game-bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 700px) {
+  .skg-settings-shell {
+    flex-direction: column;
+  }
+  .skg-settings-tabs {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--skg-border);
+    -webkit-overflow-scrolling: touch;
+  }
+  .skg-settings-tab {
+    flex: 1 0 auto;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.55rem 0.6rem;
+    border-bottom: none;
+    border-right: 1px solid var(--skg-border);
+    text-align: center;
+    font-size: 0.66rem;
+  }
+  .skg-settings-tab:last-child {
+    border-right: none;
+  }
+  .skg-settings-tab-active {
+    box-shadow: inset 0 -3px 0 var(--skg-cyan);
+  }
+  .skg-tab-label {
+    font-size: 0.6rem;
+  }
+  .skg-settings-content {
+    padding: 0.9rem 0.8rem;
+    max-height: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .skg-avatar-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  }
+  .skg-projectile-grid {
+    grid-template-columns: repeat(auto-fill, minmax(78px, 1fr));
+  }
+  .skg-bg-grid {
+    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  }
+}

@@ -1,0 +1,437 @@
+/* ============================================================================
+   NewGames4.css
+   Styles for TypeRunner, SpellBrawler, GravityTyper, WordTowerDefense.
+   Import alongside all other game CSS files.
+   ============================================================================ */
+
+/* ============================================================================
+   SHARED — word target highlight used by all 4 new games
+   ============================================================================ */
+.str-word-target, .sbr-move-word, .sgt-word-target, .std-word-target {
+  display: flex; align-items: center; gap: 0.7rem;
+  background: var(--skg-surface); border: 2px solid var(--skg-border);
+  border-radius: 14px; padding: 0.65rem 1rem;
+  transition: border-color 0.15s ease;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--skg-cyan) 10%, transparent);
+}
+.str-action-badge, .sbr-move-word .sbr-action-badge,
+.sgt-action-badge, .std-action-badge {
+  font-size: 0.65rem; font-weight: 900; border-radius: 999px;
+  padding: 0.2rem 0.6rem; color: #0a0d16; white-space: nowrap; flex-shrink: 0;
+}
+.str-word-chars, .sbr-move-chars, .sgt-word-chars, .std-word-chars {
+  display: flex; gap: 2px; font-family: var(--skg-font-mono);
+  font-size: 1.7rem; font-weight: 900;
+}
+
+/* ============================================================================
+   TYPE RUNNER  (Mario-style platformer)
+   ============================================================================ */
+.skg-typerunner { position: relative; min-height: 100vh; }
+
+.str-hud { position: relative; z-index: 10; }
+
+.str-score-bar {
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  background: rgba(0,0,0,0.45); border: 1px solid var(--skg-border);
+  border-radius: 10px; padding: 0.4rem 0.9rem;
+  font-size: 0.8rem; color: var(--skg-text-muted); backdrop-filter: blur(4px);
+  position: relative; z-index: 10;
+}
+.str-new-best {
+  color: var(--skg-amber); font-weight: 800;
+  animation: skg-cursor-pulse 0.7s ease-in-out infinite;
+}
+
+/* Game world */
+.str-world {
+  position: relative; height: 42vh; min-height: 220px;
+  background: transparent; overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+/* Ground */
+.str-ground {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 8%;
+  background: linear-gradient(180deg, var(--skg-border) 0%, var(--skg-surface) 100%);
+  border-top: 3px solid var(--skg-border-bright);
+}
+
+/* Player */
+.str-player {
+  position: absolute;
+  transform: translateX(-50%);
+  transition: bottom 0.04s linear;
+  z-index: 5;
+}
+
+/* Objects */
+.str-object {
+  position: absolute; transform: translateX(-50%);
+  font-size: 1.6rem; line-height: 1;
+  transition: left 0.016s linear;
+  z-index: 4;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.str-obj-enemy, .str-obj-flyEnemy {
+  animation: str-enemy-bob 0.8s ease-in-out infinite;
+}
+@keyframes str-enemy-bob {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(-6px); }
+}
+
+/* Floating effects */
+.str-effect {
+  position: absolute; transform: translate(-50%, -50%);
+  font-size: 0.85rem; font-weight: 900; pointer-events: none;
+  animation: str-effect-up 0.9s ease-out forwards;
+  z-index: 10; white-space: nowrap;
+}
+@keyframes str-effect-up {
+  0%   { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -180%); }
+}
+
+/* Typing */
+.str-type-area {
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  padding: 0.5rem;
+  position: relative; z-index: 10;
+}
+.str-type-hint {
+  display: flex; align-items: center; gap: 0.5rem;
+  font-size: 0.7rem; color: var(--skg-text-dim);
+}
+
+/* Controls grid */
+.str-control-grid { display: flex; flex-direction: column; gap: 0.3rem; }
+.str-ctrl {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-size: 0.8rem; color: var(--skg-text-muted);
+}
+.str-ctrl-key {
+  background: var(--skg-surface-raised); border: 1px solid var(--skg-border);
+  border-radius: 6px; padding: 0.2rem 0.5rem;
+  font-family: var(--skg-font-mono); font-size: 0.72rem; color: var(--skg-text);
+}
+
+/* ============================================================================
+   SPELL BRAWLER  (Street fighter)
+   ============================================================================ */
+.skg-brawler { position: relative; min-height: 100vh; }
+.sbr-lobby-card { border-color: #f43f5e; }
+
+.sbr-round-banner {
+  position: absolute; inset: 0; background: rgba(0,0,0,0.65);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50; animation: skg-overlay-in 0.15s ease;
+}
+.sbr-round-text {
+  font-family: var(--skg-font-display); font-size: clamp(2rem,8vw,4rem);
+  font-weight: 900; color: var(--skg-amber);
+  text-shadow: 0 0 40px var(--skg-amber);
+  animation: skg-count-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.sbr-hud { gap: 0.6rem; }
+.sbr-round-indicator {
+  font-family: var(--skg-font-mono); font-size: 0.82rem; font-weight: 800;
+  color: var(--skg-amber); background: color-mix(in srgb,var(--skg-amber) 12%,transparent);
+  border: 1px solid color-mix(in srgb,var(--skg-amber) 30%,transparent);
+  border-radius: 8px; padding: 0.3rem 0.6rem;
+}
+.sbr-wins {
+  font-size: 1rem; letter-spacing: 0.2rem;
+  background: var(--skg-surface-alt); border: 1px solid var(--skg-border);
+  border-radius: 8px; padding: 0.3rem 0.6rem;
+}
+
+.sbr-hp-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem; background: rgba(0,0,0,0.35);
+  border-radius: 12px; backdrop-filter: blur(4px);
+}
+.sbr-hp-wrap { flex: 1; display: flex; flex-direction: column; gap: 0.2rem; }
+.sbr-hp-player { text-align: left; }
+.sbr-hp-ai     { text-align: right; }
+.sbr-hp-name   { font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
+.sbr-hp-track  { height: 16px; background: var(--skg-surface-alt); border-radius: 999px; overflow: hidden; border: 1px solid var(--skg-border); }
+.sbr-hp-fill   { height: 100%; border-radius: 999px; transition: width 0.2s ease; }
+.sbr-hp-ai .sbr-hp-track { direction: rtl; }
+.sbr-hp-num    { font-family: var(--skg-font-mono); font-size: 0.75rem; font-weight: 700; }
+.sbr-vs-badge  {
+  font-size: 1rem; font-weight: 900; color: var(--skg-text-muted);
+  background: var(--skg-surface); border: 1px solid var(--skg-border);
+  border-radius: 8px; padding: 0.3rem 0.6rem; flex-shrink: 0;
+}
+
+/* Arena */
+.sbr-arena {
+  position: relative; height: 38vh; min-height: 200px;
+  background: linear-gradient(180deg, transparent 70%, rgba(0,0,0,0.3) 100%);
+  overflow: hidden; margin: 0.4rem 0;
+}
+.sbr-ground {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 12%;
+  background: linear-gradient(180deg, rgba(100,80,40,0.6), rgba(60,40,10,0.8));
+  border-top: 3px solid rgba(200,160,60,0.5);
+}
+
+.sbr-fighter {
+  position: absolute; bottom: 12%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.2rem;
+  transition: left 0.15s ease;
+}
+.sbr-fighter-label { font-size: 0.68rem; font-weight: 800; color: var(--skg-text-muted); }
+.sbr-shield-fx { font-size: 1.5rem; animation: skg-glow-pulse 0.5s ease-in-out infinite; }
+
+/* Fighter animations */
+.sbr-player-anim-punch  { animation: sbr-punch 0.3s ease; }
+.sbr-player-anim-hurt   { animation: skg-shake 0.3s ease; }
+.sbr-player-anim-block  { filter: brightness(1.4); }
+.sbr-player-anim-ko     { filter: brightness(0.4) saturate(0); }
+.sbr-player-anim-victory { animation: skg-victory-bounce 0.55s ease; }
+.sbr-ai-anim-punch  { animation: sbr-ai-punch 0.3s ease; }
+.sbr-ai-anim-hurt   { animation: skg-shake 0.3s ease; }
+.sbr-ai-anim-ko     { filter: brightness(0.3) saturate(0); transform: rotate(30deg); }
+.sbr-ai-anim-taunt  { animation: sbr-taunt 0.5s ease; }
+
+@keyframes sbr-punch {
+  0%   { transform: translateX(0) scaleX(1); }
+  40%  { transform: translateX(20%) scaleX(1.1); }
+  100% { transform: translateX(0) scaleX(1); }
+}
+@keyframes sbr-ai-punch {
+  0%   { transform: translateX(0) scaleX(-1); }
+  40%  { transform: translateX(-20%) scaleX(-1.1); }
+  100% { transform: translateX(0) scaleX(-1); }
+}
+@keyframes sbr-taunt {
+  0%,100% { transform: scaleX(-1) translateY(0); }
+  50%      { transform: scaleX(-1) translateY(-10%); }
+}
+
+.sbr-ai-char { font-size: 3.5rem; display: block; transform: scaleX(-1); filter: drop-shadow(0 0 8px rgba(255,80,80,0.5)); }
+.sbr-effect {
+  position: absolute; font-size: 1rem; font-weight: 900; pointer-events: none;
+  animation: str-effect-up 1.1s ease-out forwards; transform: translate(-50%,-50%);
+}
+
+.sbr-battle-log {
+  background: rgba(0,0,0,0.4); border: 1px solid var(--skg-border);
+  border-radius: 10px; padding: 0.4rem 0.8rem; backdrop-filter: blur(3px);
+  min-height: 44px;
+}
+.sbr-log-line { font-size: 0.75rem; color: var(--skg-text-muted); line-height: 1.5; }
+
+.sbr-type-area { display: flex; flex-direction: column; align-items: center; gap: 0.35rem; }
+.sbr-type-hint { display: flex; align-items: center; gap: 0.5rem; font-size: 0.7rem; color: var(--skg-text-dim); }
+
+.sbr-move-emoji  { font-size: 1.4rem; }
+.sbr-move-chars  { display: flex; gap: 2px; font-family: var(--skg-font-mono); font-size: 1.6rem; font-weight: 900; }
+.sbr-move-name   { font-size: 0.72rem; color: var(--skg-text-muted); white-space: nowrap; }
+
+.sbr-move-preview { margin-top: 0.6rem; }
+.sbr-preview-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+.sbr-preview-chip {
+  display: flex; align-items: center; gap: 0.3rem;
+  background: var(--skg-surface-alt); border: 1.5px solid;
+  border-radius: 8px; padding: 0.25rem 0.55rem; font-size: 0.75rem;
+}
+.sbr-result-card { max-width: 340px; }
+.sbr-result-icon { font-size: 2.5rem; margin-bottom: 0.3rem; }
+
+/* ============================================================================
+   GRAVITY TYPER  (Asteroids)
+   ============================================================================ */
+.skg-gravity { position: relative; min-height: 100vh; }
+.sgt-lobby-card { border-color: #22e6c5; }
+.sgt-hud { position: relative; z-index: 10; }
+
+.sgt-space {
+  position: relative; height: 55vh; min-height: 300px;
+  overflow: hidden; border: 1px solid var(--skg-border);
+  border-radius: 14px; margin: 0.5rem 0;
+  background: transparent;
+}
+
+/* Ship */
+.sgt-ship {
+  position: absolute; transform: translate(-50%, -50%);
+  font-size: 1.6rem; z-index: 5;
+  transition: left 0.016s linear, top 0.016s linear;
+  filter: drop-shadow(0 0 6px #22e6c5);
+}
+.sgt-ship-body { line-height: 1; }
+.sgt-thrust-flame {
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%) rotate(180deg);
+  font-size: 0.9rem; animation: skg-pressure-warn 0.15s ease-in-out infinite;
+}
+
+/* Asteroids */
+.sgt-asteroid {
+  position: absolute; transform: translate(-50%, -50%);
+  line-height: 1; cursor: default; z-index: 4;
+}
+.sgt-ast-1 { font-size: 1rem; }
+.sgt-ast-2 { font-size: 1.5rem; }
+.sgt-ast-3 { font-size: 2rem; }
+.sgt-ast-4 { font-size: 2.5rem; }
+
+/* Bullets */
+.sgt-bullet {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22e6c5;
+  box-shadow: 0 0 8px #22e6c5;
+  z-index: 6;
+}
+
+/* Effects */
+.sgt-effect {
+  position: absolute; transform: translate(-50%, -50%);
+  font-size: 0.8rem; font-weight: 900; pointer-events: none;
+  animation: str-effect-up 0.9s ease-out forwards; white-space: nowrap;
+  z-index: 10;
+}
+
+.sgt-type-area {
+  display: flex; justify-content: center; padding: 0.4rem;
+  position: relative; z-index: 10;
+}
+.sgt-word-target { min-width: 260px; justify-content: center; }
+
+/* ============================================================================
+   WORD TOWER DEFENSE
+   ============================================================================ */
+.skg-towerdef { position: relative; min-height: 100vh; display: flex; flex-direction: column; gap: 0.5rem; }
+.std-lobby-card { border-color: #4ade80; }
+
+.std-hud { gap: 0.5rem; }
+.std-gold-hud {
+  color: var(--skg-amber); background: color-mix(in srgb,var(--skg-amber) 10%,transparent);
+  border-color: color-mix(in srgb,var(--skg-amber) 25%,transparent);
+  font-family: var(--skg-font-mono); font-weight: 800;
+}
+.std-wave-cd {
+  font-family: var(--skg-font-mono); font-size: 0.8rem; color: var(--skg-coral);
+  background: color-mix(in srgb,var(--skg-coral) 10%,transparent);
+  border: 1px solid color-mix(in srgb,var(--skg-coral) 25%,transparent);
+  border-radius: 8px; padding: 0.3rem 0.6rem;
+  animation: skg-cursor-pulse 0.7s ease-in-out infinite;
+}
+
+/* Map */
+.std-map {
+  flex: 1; position: relative; min-height: 46vh;
+  background: rgba(0,0,0,0.25); border: 1px solid var(--skg-border);
+  border-radius: 14px; overflow: hidden;
+}
+.std-path-svg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 1;
+}
+
+/* Tower slots */
+.std-slot {
+  position: absolute; transform: translate(-50%,-50%);
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 2px dashed rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.04);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; cursor: default; z-index: 3;
+  transition: all 0.15s ease;
+}
+.std-slot-used {
+  border-style: solid; border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.08);
+  box-shadow: 0 0 8px rgba(255,255,255,0.1);
+}
+
+/* Tower range rings */
+.std-tower-range {
+  position: absolute; border-radius: 50%;
+  border: 1px solid;
+  transform: translate(-50%,-50%);
+  pointer-events: none; z-index: 2; opacity: 0;
+  transition: opacity 0.15s;
+}
+.std-slot-used:hover ~ .std-tower-range { opacity: 1; }
+
+/* Bullets */
+.std-bullet {
+  position: absolute; transform: translate(-50%,-50%);
+  width: 6px; height: 6px; border-radius: 50%;
+  z-index: 5; box-shadow: 0 0 4px currentColor;
+}
+
+/* Enemies */
+.std-enemy {
+  position: absolute; transform: translate(-50%,-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  z-index: 4; pointer-events: none;
+}
+.std-enemy-emoji { font-size: 1.2rem; line-height: 1; }
+.std-enemy-hp-bar {
+  width: 24px; height: 3px; background: rgba(0,0,0,0.4);
+  border-radius: 999px; overflow: hidden;
+}
+.std-enemy-hp-fill { height: 100%; border-radius: 999px; transition: width 0.1s linear; }
+
+/* Base */
+.std-base {
+  position: absolute; transform: translate(-50%,-50%);
+  font-size: 2rem; z-index: 3; filter: drop-shadow(0 0 8px #fbbf24);
+}
+
+/* Effects */
+.std-effect {
+  position: absolute; transform: translate(-50%,-50%);
+  font-size: 0.8rem; font-weight: 900; pointer-events: none;
+  animation: str-effect-up 0.9s ease-out forwards; white-space: nowrap; z-index: 10;
+}
+
+/* Bottom panel */
+.std-bottom-panel {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; align-items: start;
+  background: rgba(0,0,0,0.35); border: 1px solid var(--skg-border);
+  border-radius: 12px; padding: 0.6rem 0.8rem; backdrop-filter: blur(4px);
+}
+@media (max-width: 700px) { .std-bottom-panel { grid-template-columns: 1fr; } }
+
+.std-log-strip { display: flex; flex-direction: column; gap: 0.2rem; }
+.std-log-line  { font-size: 0.7rem; color: var(--skg-text-muted); line-height: 1.4; }
+
+.std-type-col  { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.std-hint-row  { display: flex; align-items: center; gap: 0.4rem; font-size: 0.68rem; color: var(--skg-text-dim); }
+
+.std-tower-quick { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.std-quick-chip {
+  display: flex; align-items: center; gap: 0.25rem;
+  background: var(--skg-surface-alt); border: 1.5px solid;
+  border-radius: 8px; padding: 0.2rem 0.5rem; font-size: 0.7rem;
+  transition: all 0.15s; white-space: nowrap;
+}
+.std-quick-disabled { opacity: 0.35; filter: grayscale(0.6); }
+.std-chip-cost { color: var(--skg-amber); font-size: 0.65rem; font-weight: 700; }
+
+.std-tower-preview { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.4rem; }
+.std-tower-chip {
+  display: flex; align-items: center; gap: 0.3rem;
+  background: var(--skg-surface-alt); border: 1.5px solid;
+  border-radius: 8px; padding: 0.25rem 0.6rem; font-size: 0.75rem;
+}
+.std-tower-chip code { font-family: var(--skg-font-mono); font-weight: 800; font-size: 0.8rem; }
+.std-word-chars { display: flex; gap: 2px; font-family: var(--skg-font-mono); font-size: 1.5rem; font-weight: 900; }
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+@media (max-width: 600px) {
+  .str-world, .sbr-arena, .sgt-space { min-height: 170px; }
+  .str-word-chars, .sbr-move-chars, .sgt-word-chars, .std-word-chars { font-size: 1.2rem; }
+  .sbr-hp-track { height: 10px; }
+  .std-map { min-height: 34vh; }
+}
